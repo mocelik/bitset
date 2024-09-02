@@ -1,5 +1,5 @@
 
-#include "small_bitset.hpp"
+#include "../small_bitset.hpp"
 
 #include <gtest/gtest.h>
 

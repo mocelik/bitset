@@ -6,7 +6,7 @@ INCLUDE_DIR  := ${BUILD_DIR}/include
 GTEST_TARGET := ${INCLUDE_DIR}/gtest
 
 TEST_APP  := ${BUILD_DIR}/gtest_bitset
-TEST_SRCS := test.cpp
+TEST_SRCS := test/test.cpp
 TEST_OBJS := ${BUILD_MIRROR}/${TEST_SRCS:.cpp=.o}
 
 .PHONY: test all
@@ -22,6 +22,7 @@ ${TEST_APP}: ${TEST_OBJS} | ${BUILD_DIR}
 	${CXX} ${LDFLAGS} ${CFLAGS} -o $@ $^ -I${INCLUDE_DIR} ${LDLIBS}
 
 ${TEST_OBJS}: ${BUILD_MIRROR}/%.o : %.cpp | ${BUILD_MIRROR} ${GTEST_TARGET}
+	@mkdir -p $(dir $@)
 	${CXX} -c ${CFLAGS} -o $@ $<
 
 ${BUILD_DIR} ${BUILD_MIRROR} ${INCLUDE_DIR} ${LIB_DIR}:
