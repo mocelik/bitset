@@ -1,7 +1,7 @@
 
 #include <cstddef>
 
-namespace nostd {
+namespace nonstd {
     template <std::size_t N>
     class small_bitset {
         

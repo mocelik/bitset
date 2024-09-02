@@ -4,5 +4,5 @@
 #include <gtest/gtest.h>
 
 TEST(x,y) {
-    nostd::small_bitset<8> s;
+    nonstd::small_bitset<8> s;
 }
