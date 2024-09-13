@@ -23,13 +23,15 @@ ${TEST_APP}: ${TEST_OBJS} | ${BUILD_DIR}
 
 ${TEST_OBJS}: ${BUILD_MIRROR}/%.o : %.cpp | ${BUILD_MIRROR} ${GTEST_TARGET}
 	@mkdir -p $(dir $@)
-	${CXX} -c ${CFLAGS} -o $@ $<
+	${CXX} -c -MMD -MP ${CFLAGS} -o $@ $<
 
 ${BUILD_DIR} ${BUILD_MIRROR} ${INCLUDE_DIR} ${LIB_DIR}:
 	@mkdir -p $@
 
 clean:
 	@rm -rf ${BUILD_DIR}
+
+-include $(patsubst %.o,%.d,${TEST_OBJS})
 
 ### Download, build and "install" gtest into build directory
 ################################################################################
