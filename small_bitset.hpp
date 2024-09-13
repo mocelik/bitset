@@ -1,6 +1,7 @@
 
 #include <bitset>
 #include <cstddef>
+#include <cstring> // memset
 
 namespace nonstd {
 
@@ -11,13 +12,16 @@ template <std::size_t N, typename Underlying = std::byte> class small_bitset {
         return 8 * sizeof(underlying_type_t);
     }
 
-    underlying_type_t data[(N + underlying_bits() - 1) / underlying_bits()];
+    underlying_type_t data[(N + underlying_bits() - 1) / underlying_bits()] = {
+        underlying_type_t(0)};
 
     constexpr std::size_t indexOf(std::size_t i) const {
-        return (i + underlying_bits() - 1) / underlying_bits();
+        return i / underlying_bits();
     }
 
   public:
+    constexpr small_bitset() { std::memset(data, 0, sizeof(data)); }
+
     constexpr bool operator[](std::size_t i) const {
         return (data[indexOf(i)] &
                 underlying_type_t(1 << (i % underlying_bits()))) !=
@@ -35,7 +39,16 @@ template <std::size_t N, typename Underlying = std::byte> class small_bitset {
         return *this;
     }
 
-    bool test(std::size_t pos) const { return (*this)[pos]; }
+    bool test(std::size_t pos) const { return this->operator[](pos); }
+
+    constexpr std::size_t count() const {
+        std::size_t cnt = 0;
+        for (std::size_t i = 0; i < size(); ++i) {
+            if (test(i))
+                ++cnt;
+        }
+        return cnt;
+    }
 
     constexpr std::size_t size() const noexcept { return N; }
 };
