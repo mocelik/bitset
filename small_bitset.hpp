@@ -4,10 +4,10 @@
 
 namespace nonstd {
 
-    template <std::size_t N>
+    template <std::size_t N, typename Underlying = std::byte>
     class small_bitset {
 
-        using underlying_type_t = std::byte;
+        using underlying_type_t = Underlying;
         static constexpr std::size_t underlying_bits() { return 8 * sizeof(underlying_type_t);}
 
         underlying_type_t data[(N + underlying_bits() - 1) / underlying_bits()];
