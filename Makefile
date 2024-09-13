@@ -14,7 +14,7 @@ all: test
 test: ${TEST_APP}
 	@${TEST_APP}
 
-CFLAGS  := -I${INCLUDE_DIR}
+CFLAGS  := -I${INCLUDE_DIR} -g -Og
 LDFLAGS := -L${LIB_DIR}
 LDLIBS  := -lgtest -lgtest_main
 
