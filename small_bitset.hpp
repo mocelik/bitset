@@ -70,5 +70,16 @@ template <std::size_t N, typename Underlying = uint8_t> class small_bitset {
         return m_data[num_words() - 1] ==
                (all_ones >> (num_underlying_bits() * num_words() - N));
     }
+
+    constexpr bool any() const noexcept {
+        for (auto i = 0; i < num_words() - 1; ++i) {
+            if (m_data[i] != underlying_type_t(0)) {
+                return true;
+            }
+        }
+        return (m_data[num_words() - 1] &
+                (~underlying_type_t{0} >> (num_underlying_bits() * num_words() -
+                                           N))) > underlying_type_t{0};
+    }
 };
 } // namespace nonstd
