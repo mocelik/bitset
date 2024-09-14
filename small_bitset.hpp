@@ -47,8 +47,8 @@ template <std::size_t N, typename Underlying = uint8_t> class small_bitset {
 
     bool test(std::size_t pos) const { return this->operator[](pos); }
 
-    constexpr std::size_t count() const {
-        std::size_t cnt = 0;
+    constexpr std::size_t count() const noexcept {
+        std::size_t cnt{0};
         for (std::size_t i = 0; i < size(); ++i) {
             if (test(i))
                 ++cnt;
@@ -62,7 +62,7 @@ template <std::size_t N, typename Underlying = uint8_t> class small_bitset {
         constexpr underlying_type_t all_ones =
             ~static_cast<underlying_type_t>(0);
         for (auto i = 0; i < num_words() - 1; ++i) {
-            if (std::memcmp(&m_data[i], &all_ones, sizeof all_ones)) {
+            if (std::memcmp(&m_data[i], &all_ones, sizeof all_ones) != 0) {
 
                 return false;
             }
@@ -73,13 +73,24 @@ template <std::size_t N, typename Underlying = uint8_t> class small_bitset {
 
     constexpr bool any() const noexcept {
         for (auto i = 0; i < num_words() - 1; ++i) {
-            if (m_data[i] != underlying_type_t(0)) {
+            if (m_data[i] != underlying_type_t{0}) {
                 return true;
             }
         }
         return (m_data[num_words() - 1] &
                 (~underlying_type_t{0} >> (num_underlying_bits() * num_words() -
                                            N))) > underlying_type_t{0};
+    }
+
+    constexpr bool none() const noexcept {
+        constexpr underlying_type_t all_zeros{0};
+        for (auto i = 0; i < num_words() - 1; ++i) {
+            if (std::memcmp(&m_data[i], &all_zeros, sizeof all_zeros) != 0) {
+                return false;
+            }
+        }
+        return m_data[num_words() - 1] ==
+               (all_zeros >> (num_underlying_bits() * num_words() - N));
     }
 };
 } // namespace nonstd

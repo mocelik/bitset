@@ -115,3 +115,35 @@ TEST(SmallBitset, any_17) {
     s.set(16, false);
     EXPECT_FALSE(s.any());
 }
+
+TEST(SmallBitset, none_1) {
+    small_bitset<1> s;
+    s.set(0, false);
+    EXPECT_TRUE(s.none());
+    s.set(0, true);
+    EXPECT_FALSE(s.none());
+}
+
+TEST(SmallBitset, none_17) {
+    small_bitset<17> s;
+
+    s.set(0, true);
+    EXPECT_FALSE(s.none());
+    s.set(0, false);
+    EXPECT_TRUE(s.none());
+
+    s.set(7, true);
+    EXPECT_FALSE(s.none());
+    s.set(7, false);
+    EXPECT_TRUE(s.none());
+
+    s.set(8, true);
+    EXPECT_FALSE(s.none());
+    s.set(8, false);
+    EXPECT_TRUE(s.none());
+
+    s.set(16, true);
+    EXPECT_FALSE(s.none());
+    s.set(16, false);
+    EXPECT_TRUE(s.none());
+}
