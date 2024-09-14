@@ -56,13 +56,16 @@ template <std::size_t N, typename Underlying = std::byte> class small_bitset {
     constexpr std::size_t size() const noexcept { return N; }
 
     constexpr bool all() const noexcept {
+        constexpr underlying_type_t all_ones =
+            ~static_cast<underlying_type_t>(0);
         for (auto i = 0; i < num_words() - 1; ++i) {
-            if (m_data[i] != (~underlying_type_t(0)))
+            if (std::memcmp(&m_data[i], &all_ones, sizeof all_ones)) {
+
                 return false;
+            }
         }
         return m_data[num_words() - 1] ==
-               (~underlying_type_t(0) >>
-                (num_underlying_bits() * num_words() - N));
+               (all_ones >> (num_underlying_bits() * num_words() - N));
     }
 };
 } // namespace nonstd

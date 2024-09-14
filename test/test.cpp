@@ -77,8 +77,8 @@ TEST(SmallBitset, all_1) {
     EXPECT_TRUE(s.all());
 }
 
-TEST(SmallBitset, all_9) {
-    small_bitset<9, uint8_t> s;
+TEST(SmallBitset, all_17) {
+    small_bitset<17, uint8_t> s;
     for (auto i = 0; i < s.size(); ++i)
         s.set(i, true);
     EXPECT_TRUE(s.all());
