@@ -8,33 +8,36 @@ namespace nonstd {
 template <std::size_t N, typename Underlying = std::byte> class small_bitset {
 
     using underlying_type_t = Underlying;
-    static constexpr std::size_t underlying_bits() {
+    static constexpr std::size_t num_underlying_bits() {
         return 8 * sizeof(underlying_type_t);
     }
 
-    underlying_type_t data[(N + underlying_bits() - 1) / underlying_bits()] = {
-        underlying_type_t(0)};
-
-    constexpr std::size_t indexOf(std::size_t i) const {
-        return i / underlying_bits();
+    static constexpr std::size_t num_words() {
+        return (N + num_underlying_bits() - 1) / num_underlying_bits();
     }
 
+    static constexpr std::size_t underlying_index(std::size_t i) {
+        return i / num_underlying_bits();
+    }
+
+    underlying_type_t m_data[num_words()] = {underlying_type_t(0)};
+
   public:
-    constexpr small_bitset() { std::memset(data, 0, sizeof(data)); }
+    constexpr small_bitset() { std::memset(m_data, 0, sizeof(m_data)); }
 
     constexpr bool operator[](std::size_t i) const {
-        return (data[indexOf(i)] &
-                underlying_type_t(1 << (i % underlying_bits()))) !=
+        return (m_data[underlying_index(i)] &
+                underlying_type_t(1 << (i % num_underlying_bits()))) !=
                underlying_type_t(0);
     }
 
     small_bitset &set(std::size_t pos, bool value = true) {
         if (value) {
-            data[indexOf(pos)] |=
-                underlying_type_t(1 << (pos % underlying_bits()));
+            m_data[underlying_index(pos)] |=
+                underlying_type_t(1 << (pos % num_underlying_bits()));
         } else {
-            data[indexOf(pos)] &=
-                ~underlying_type_t(1 << (pos % underlying_bits()));
+            m_data[underlying_index(pos)] &=
+                ~underlying_type_t(1 << (pos % num_underlying_bits()));
         }
         return *this;
     }
