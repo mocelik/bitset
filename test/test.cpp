@@ -37,7 +37,7 @@ TEST(SmallBitset, Initialize_False) {
 
 TEST(SmallBitset, UnderlyingType_SizeAdjusted) {
     ASSERT_GT(sizeof(small_bitset<1, std::uint64_t>),
-              sizeof(small_bitset<1, std::byte>));
+              sizeof(small_bitset<1, std::uint8_t>));
 }
 
 TEST(SmallBitset, UnderlyingType_ManyBit_Set) {
