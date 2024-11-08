@@ -26,7 +26,7 @@ template <std::size_t N, typename Underlying = uint8_t> class small_bitset {
     underlying_type_t m_data[num_words()] = {underlying_type_t(0)};
 
   public:
-    constexpr small_bitset() { std::memset(m_data, 0, sizeof(m_data)); }
+    constexpr small_bitset() { reset(); }
 
     constexpr bool operator[](std::size_t i) const {
         return (m_data[underlying_index(i)] &
@@ -92,5 +92,12 @@ template <std::size_t N, typename Underlying = uint8_t> class small_bitset {
         return m_data[num_words() - 1] ==
                (all_zeros >> (num_underlying_bits() * num_words() - N));
     }
+
+    constexpr small_bitset &reset() noexcept {
+        std::memset(m_data, 0, sizeof m_data);
+        return *this;
+    }
+
+    constexpr small_bitset &reset(std::size_t pos) { return set(pos, false); }
 };
 } // namespace nonstd
