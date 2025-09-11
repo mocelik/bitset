@@ -1,12 +1,13 @@
 
 #include <bitset>
 #include <cstddef>
+#include <cstdint>
 #include <cstring> // memset
 #include <type_traits>
 
 namespace nonstd {
 
-template <std::size_t N, typename Underlying = uint8_t> class small_bitset {
+template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset {
     static_assert(std::is_unsigned_v<Underlying>,
                   "small_bitset requires an unsigned underlying type");
 

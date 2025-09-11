@@ -47,7 +47,7 @@ ${INCLUDE_DIR}/gtest: | ${GTEST_BUILD_DIR} ${LIB_DIR} ${INCLUDE_DIR}
 	@wget -q ${GTEST_TAR_URL} -O ${GTEST_TAR_FILE} 
 	@tar -C ${GTEST_BUILD_DIR} --strip-components=1 -xzf ${GTEST_TAR_FILE} 
 	@printf "Building gtest...\n"
-	cmake -S ${GTEST_BUILD_DIR} -B ${GTEST_BUILD_DIR} -G Ninja
+	cmake -S ${GTEST_BUILD_DIR} -B ${GTEST_BUILD_DIR}
 	cmake --build ${GTEST_BUILD_DIR} -j$(shell nproc) #-- --no-print-directory
 	@cp ${GTEST_BUILD_DIR}/lib/* ${LIB_DIR}/
 	@cp -r ${GTEST_BUILD_DIR}/googletest/include/* ${INCLUDE_DIR}
