@@ -9,42 +9,35 @@ namespace {
 static constexpr std::size_t kNumBits{128};
 }
 
-TEST(SmallBitset, SingleBit_Set) {
-    small_bitset<1> s;
-    ASSERT_FALSE(s[0]);
-    s.set(0, true);
-    ASSERT_TRUE(s[0]);
-    s.set(0, false);
-    ASSERT_FALSE(s[0]);
-}
+// Compile-time tests
+static_assert(sizeof(small_bitset<1, std::uint16_t>) > sizeof(small_bitset<1, std::uint8_t>),
+              "Smaller Underlying type did not result in smaller object");
 
-TEST(SmallBitset, ManyBit_Set) {
+TEST(SmallBitset, bracket_operator) {
     small_bitset<kNumBits> s;
-    for (int i = 0; i < s.size(); i++) {
-        s.set(i, true);
-        ASSERT_TRUE(s[i]) << "i: " << i;
-        s.set(i, false);
+    for (std::size_t i = 0; i < s.size(); i++) {
         ASSERT_FALSE(s[i]) << "i: " << i;
     }
 }
 
-TEST(SmallBitset, Initialize_False) {
+TEST(SmallBitset, initialize_to_false) {
     small_bitset<kNumBits> s;
     for (std::size_t i = 0; i < s.size(); i++) {
         ASSERT_FALSE(s.test(i)) << "i: " << i;
     }
 }
 
-TEST(SmallBitset, UnderlyingType_SizeAdjusted) {
-    ASSERT_GT(sizeof(small_bitset<1, std::uint64_t>),
-              sizeof(small_bitset<1, std::uint8_t>));
-}
-
-TEST(SmallBitset, UnderlyingType_ManyBit_Set) {
-    small_bitset<kNumBits, std::uint64_t> s;
+TEST(SmallBitset, set) {
+    small_bitset<kNumBits> s;
     for (int i = 0; i < s.size(); i++) {
         s.set(i, true);
         ASSERT_TRUE(s[i]) << "i: " << i;
+        for (int j = 0; j < s.size(); j++) {
+            if (j == i) { // do not test the bit that was set
+                continue;
+            }
+            ASSERT_FALSE(s[j]) << "Unexpected bit set at index " << j;
+        }
         s.set(i, false);
         ASSERT_FALSE(s[i]) << "i: " << i;
     }
@@ -69,81 +62,49 @@ TEST(SmallBitset, count) {
     }
 }
 
-TEST(SmallBitset, all_1) {
-    small_bitset<1> s;
-    s.set(0, false);
-    EXPECT_FALSE(s.all());
-    s.set(0, true);
-    EXPECT_TRUE(s.all());
+TEST(SmallBitset, size) {
+    small_bitset<1> s_1;
+    static_assert(s_1.size() == 1);
+
+    small_bitset<8> s_8;
+    static_assert(s_8.size() == 8);
+
+    small_bitset<9> s_9;
+    static_assert(s_9.size() == 9);
+
+    small_bitset<64> s_64;
+    static_assert(s_64.size() == 64);
+
+    small_bitset<129> s_129;
+    static_assert(s_129.size() == 129);
 }
 
-TEST(SmallBitset, all_17) {
-    small_bitset<17, uint8_t> s;
-    for (auto i = 0; i < s.size(); ++i)
+TEST(SmallBitset, all) {
+    small_bitset<kNumBits, uint8_t> s;
+    for (auto i = 0; i < s.size() - 1; ++i) {
         s.set(i, true);
+        EXPECT_FALSE(s.all());
+    }
+    s.set(s.size() -1, true);
     EXPECT_TRUE(s.all());
 }
 
-TEST(SmallBitset, any_1) {
-    small_bitset<1> s;
-    s.set(0, false);
-    EXPECT_FALSE(s.any());
-    s.set(0, true);
-    EXPECT_TRUE(s.any());
+TEST(SmallBitset, any) {
+    small_bitset<kNumBits> s;
+    for (int i = 0; i < s.size(); i++) {
+        s.set(i, true);
+        EXPECT_TRUE(s.any()) << "i: " << i;
+        s.set(i, false);
+        EXPECT_FALSE(s.any()) << "i: " << i;
+    }
 }
 
-TEST(SmallBitset, any_17) {
-    small_bitset<17> s;
-    s.set(0, true);
-    EXPECT_TRUE(s.any());
-
-    s.set(0, false);
-    EXPECT_FALSE(s.any());
-
-    s.set(7, true);
-    EXPECT_TRUE(s.any());
-    s.set(7, false);
-    EXPECT_FALSE(s.any());
-
-    s.set(8, true);
-    EXPECT_TRUE(s.any());
-    s.set(8, false);
-    EXPECT_FALSE(s.any());
-
-    s.set(16, true);
-    EXPECT_TRUE(s.any());
-    s.set(16, false);
-    EXPECT_FALSE(s.any());
-}
-
-TEST(SmallBitset, none_1) {
-    small_bitset<1> s;
-    s.set(0, false);
-    EXPECT_TRUE(s.none());
-    s.set(0, true);
-    EXPECT_FALSE(s.none());
-}
-
-TEST(SmallBitset, none_17) {
-    small_bitset<17> s;
-
-    s.set(0, true);
-    EXPECT_FALSE(s.none());
-    s.set(0, false);
-    EXPECT_TRUE(s.none());
-
-    s.set(7, true);
-    EXPECT_FALSE(s.none());
-    s.set(7, false);
-    EXPECT_TRUE(s.none());
-
-    s.set(8, true);
-    EXPECT_FALSE(s.none());
-    s.set(8, false);
-    EXPECT_TRUE(s.none());
-
-    s.set(16, true);
-    EXPECT_FALSE(s.none());
-    s.set(16, false);
-    EXPECT_TRUE(s.none());
+TEST(SmallBitset, none) {
+    small_bitset<kNumBits> s;
+    for (int i = 0; i < s.size(); i++) {
+        s.set(i, true);
+        EXPECT_FALSE(s.none()) << "i: " << i;
+        s.set(i, false);
+        EXPECT_TRUE(s.none()) << "i: " << i;
+    }
 }
