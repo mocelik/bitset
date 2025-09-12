@@ -43,6 +43,55 @@ TEST(SmallBitset, set) {
     }
 }
 
+TEST(SmallBitset, flip_all) {
+    small_bitset<kNumBits> s;
+
+    for (int i = 0; i < s.size(); i++) {
+        s.set(i, true);
+
+        // flip to reverse
+        s.flip();
+        ASSERT_FALSE(s[i]);
+        for (int j = 0; j < s.size(); j++) {
+            if (j == i) { // do not test the bit that was set
+                continue;
+            }
+            ASSERT_TRUE(s[j]);
+        }
+
+        // flip back to normal
+        s.flip();
+        ASSERT_TRUE(s[i]);
+        for (int j = 0; j < s.size(); j++) {
+            if (j == i) { // do not test the bit that was set
+                continue;
+            }
+            ASSERT_FALSE(s[j]);
+        }
+
+        s.set(i, false);
+    }
+}
+
+TEST(SmallBitset, flip_index) {
+    small_bitset<kNumBits> s;
+
+    for (int i = 0; i < s.size(); i++) {
+        s.set(i, true);
+        ASSERT_TRUE(s[i]);
+
+        s.flip(i);
+        ASSERT_FALSE(s[i]);
+
+        s.flip();
+        ASSERT_TRUE(s[i]);
+
+        s.set(i, false);
+    }
+
+    ASSERT_THROW(s.flip(s.size()), std::out_of_range);
+}
+
 TEST(SmallBitset, test) {
     small_bitset<kNumBits> s;
     for (int i = 0; i < s.size(); i++) {

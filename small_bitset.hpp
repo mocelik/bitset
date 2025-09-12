@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring> // memset
+#include <stdexcept> // std::out_of_range
 #include <type_traits>
 
 namespace nonstd {
@@ -43,6 +44,22 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
             m_data[underlying_index(pos)] &=
                 ~underlying_type_t(1 << (pos % num_underlying_bits()));
         }
+        return *this;
+    }
+
+    constexpr small_bitset &flip() noexcept {
+        for (auto i = 0; i < num_words(); i++) {
+            m_data[i] = ~m_data[i];
+        }
+        return *this;
+    }
+
+    constexpr small_bitset &flip(std::size_t pos) {
+        if (pos >= size()) {
+            throw std::out_of_range("bitset::flip: __position (which is " + std::to_string(pos) + " >= _Nb (which is " + std::to_string(N) + ")" );
+        }
+
+        set(pos, !this->test(pos));
         return *this;
     }
 
