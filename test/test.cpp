@@ -157,3 +157,65 @@ TEST(SmallBitset, none) {
         EXPECT_TRUE(s.none()) << "i: " << i;
     }
 }
+
+TEST(SmallBitset, bitwise_and) {
+    small_bitset<kNumBits> s1;
+    small_bitset<kNumBits> s2;
+
+    s1.set(0);
+    s2.set(0);
+
+    s1.set(1);
+    s1 &= s2;
+    ASSERT_TRUE(s1[0]);
+    ASSERT_FALSE(s1[1]);
+}
+
+TEST(SmallBitset, bitwise_or) {
+    small_bitset<kNumBits> s1;
+    small_bitset<kNumBits> s2;
+
+    s1.set(0);
+    s2.set(1);
+
+    s1 |= s2;
+    ASSERT_TRUE(s1[0]);
+    ASSERT_TRUE(s1[1]);
+    ASSERT_FALSE(s1[2]);
+}
+
+TEST(SmallBitset, bitwise_xor) {
+    small_bitset<kNumBits> s1;
+    small_bitset<kNumBits> s2;
+
+    s1.set(0);
+    s2.set(1);
+    s1.set(2);
+    s2.set(2);
+
+    s1 ^= s2;
+    ASSERT_TRUE(s1[0]);
+    ASSERT_TRUE(s1[1]);
+    ASSERT_FALSE(s1[2]);
+    ASSERT_FALSE(s1[3]);
+}
+
+TEST(SmallBitset, bitwise_not) {
+    small_bitset<kNumBits> s1;
+
+    s1.set(0);
+    s1.set(2);
+    auto inverse = ~s1;
+
+    ASSERT_TRUE(s1[0]);
+    ASSERT_FALSE(inverse[0]);
+
+    ASSERT_FALSE(s1[1]);
+    ASSERT_TRUE(inverse[1]);
+
+    ASSERT_TRUE(s1[2]);
+    ASSERT_FALSE(inverse[2]);
+
+    ASSERT_FALSE(s1[3]);
+    ASSERT_TRUE(inverse[3]);
+}

@@ -117,5 +117,35 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     }
 
     constexpr small_bitset &reset(std::size_t pos) { return set(pos, false); }
+
+
+    constexpr small_bitset& operator&=( const small_bitset& other ) noexcept {
+        for (auto i=0; i < num_words(); i++) {
+            m_data[i] &= other.m_data[i];
+        }
+        return *this;
+    }
+
+    constexpr small_bitset& operator|=( const small_bitset& other ) noexcept {
+        for (auto i=0; i < num_words(); i++) {
+            m_data[i] |= other.m_data[i];
+        }
+        return *this;
+    }
+
+    constexpr small_bitset& operator^=( const small_bitset& other ) noexcept{
+        for (auto i=0; i < num_words(); i++) {
+            m_data[i] ^= other.m_data[i];
+        }
+        return *this;
+    }
+
+    constexpr small_bitset operator~() const noexcept {
+        small_bitset<N, Underlying> other;
+        for (auto i = 0; i < num_words(); i++) {
+            other.m_data[i] = ~m_data[i];
+        }
+        return other;
+    }
 };
 } // namespace nonstd
