@@ -149,24 +149,26 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     }
 
     constexpr small_bitset operator<<( std::size_t shift ) const noexcept {
-        small_bitset other;
+        return small_bitset(*this) <<= shift;
+    }
 
+    constexpr small_bitset& operator<<=( std::size_t shift ) noexcept {
         const auto num_words_to_shift = shift / num_underlying_bits();
         const auto num_bits_to_shift = shift % num_underlying_bits();
 
         // Handle the words between the most significant and the least significant
         for (auto i = num_words() - 1; i > num_words_to_shift; i--) {
-            other.m_data[i]  = m_data[(i - num_words_to_shift) - 0] << num_bits_to_shift;
-            other.m_data[i] |= m_data[(i - num_words_to_shift) - 1] >> (num_underlying_bits() - num_bits_to_shift);
+            m_data[i]  = m_data[(i - num_words_to_shift) - 0] << num_bits_to_shift;
+            m_data[i] |= m_data[(i - num_words_to_shift) - 1] >> (num_underlying_bits() - num_bits_to_shift);
         }
-        other.m_data[num_words_to_shift] = m_data[0] << num_bits_to_shift;
+        m_data[num_words_to_shift] = m_data[0] << num_bits_to_shift;
 
         // zero-fill from the right
         for (auto i = 0; i < num_words_to_shift; i++) {
-            other.m_data[i] = 0;
+            m_data[i] = 0;
         }
 
-        return other;
+        return *this;
     }
 };
 
