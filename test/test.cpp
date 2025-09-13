@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "../small_bitset.hpp"
 #include <gtest/gtest.h>
 
@@ -218,4 +216,57 @@ TEST(SmallBitset, bitwise_not) {
 
     ASSERT_FALSE(s1[3]);
     ASSERT_TRUE(inverse[3]);
+}
+
+TEST(SmallBitset, bitwise_left_shift_first_bit) {
+    for (auto i = 0; i < kNumBits; i++) {
+        small_bitset<kNumBits> s;
+        s.set(0);
+        s = s << i;
+        ASSERT_TRUE(s[i]) << "i = " << i << ", bitset: " << s;
+        ASSERT_EQ(s.count(), 1) << "i = " << i << ", bitset: " << s;
+    }
+}
+
+TEST(SmallBitset, bitwise_left_shift_nth_bit) {
+    for (auto i = 0; i < kNumBits - 1; i++) {
+        small_bitset<kNumBits> s;
+        s.set(i);
+        s = s << 1;
+        ASSERT_TRUE(s[i+1]) << "i = " << i << ", bitset: " << s;
+        ASSERT_EQ(s.count(), 1) << "i = " << i << ", bitset: " << s;
+    }
+
+    small_bitset<kNumBits> s;
+    s.set(kNumBits - 1);
+    s = s << 1;
+    ASSERT_TRUE(s.none());
+}
+
+TEST(SmallBitset, bitwise_left_shift_multiple_bits) {
+    for (auto i = 0; i < 8; i++) {
+        small_bitset<kNumBits> s;
+        constexpr auto kNumUnderlying = kNumBits/(8*sizeof(uint8_t));
+
+        // Set the i'th bit in each word
+        for (auto j = 0; j < kNumUnderlying; j++) {
+            s.set(i+(j*8));
+        }
+        ASSERT_EQ(s.count(), kNumUnderlying);
+
+        s = s << 1;
+
+        // Check the i+1'th bit in each word
+        for (auto j = 0; j < kNumUnderlying; j++) {
+            ASSERT_TRUE(s[i+(j*8) + 1]);
+            ASSERT_FALSE(s[i+(j*8)]);
+        }
+
+        // Verify that extraneous bits were not set
+        if (i != 7) {
+            ASSERT_EQ(s.count(), kNumUnderlying);
+        } else {
+            ASSERT_EQ(s.count(), kNumUnderlying - 1); // the leftmost 1 was discarded
+        }
+    }
 }

@@ -1,10 +1,10 @@
 
-#include <bitset>
 #include <cstddef>
 #include <cstdint>
 #include <cstring> // memset
 #include <stdexcept> // std::out_of_range
 #include <type_traits>
+#include <ostream>
 
 namespace nonstd {
 
@@ -141,11 +141,41 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     }
 
     constexpr small_bitset operator~() const noexcept {
-        small_bitset<N, Underlying> other;
+        small_bitset other;
         for (auto i = 0; i < num_words(); i++) {
             other.m_data[i] = ~m_data[i];
         }
         return other;
     }
+
+    constexpr small_bitset operator<<( std::size_t shift ) const noexcept {
+        small_bitset other;
+
+        const auto num_words_to_shift = shift / num_underlying_bits();
+        const auto num_bits_to_shift = shift % num_underlying_bits();
+
+        // Handle the words between the most significant and the least significant
+        for (auto i = num_words() - 1; i > num_words_to_shift; i--) {
+            other.m_data[i]  = m_data[(i - num_words_to_shift) - 0] << num_bits_to_shift;
+            other.m_data[i] |= m_data[(i - num_words_to_shift) - 1] >> (num_underlying_bits() - num_bits_to_shift);
+        }
+        other.m_data[num_words_to_shift] = m_data[0] << num_bits_to_shift;
+
+        // zero-fill from the right
+        for (auto i = 0; i < num_words_to_shift; i++) {
+            other.m_data[i] = 0;
+        }
+
+        return other;
+    }
 };
+
+template <std::size_t N, typename Underlying>
+std::ostream& operator<<(std::ostream& os, small_bitset<N, Underlying> bits) {
+    for (auto i = bits.size() - 1; i > 0; i--) {
+        os << bits[i];
+    }
+    return os << bits[0];
+}
+
 } // namespace nonstd
