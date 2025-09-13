@@ -170,6 +170,29 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
 
         return *this;
     }
+
+    constexpr small_bitset operator>>( std::size_t shift ) const noexcept {
+        return small_bitset(*this) >>= shift;
+    }
+
+    constexpr small_bitset& operator>>=( std::size_t shift ) noexcept {
+        const auto num_words_to_shift = shift / num_underlying_bits();
+        const auto num_bits_to_shift = shift % num_underlying_bits();
+
+        for (auto i = 0; i < (num_words() - 1) - num_words_to_shift; i++) {
+
+            m_data[i]  = m_data[(i + num_words_to_shift) + 0] >> num_bits_to_shift;
+            m_data[i] |= m_data[(i + num_words_to_shift) + 1] << (num_underlying_bits() - num_bits_to_shift);
+        }
+        m_data[(num_words() - 1) - num_words_to_shift] = m_data[(num_words() - 1)] >> num_bits_to_shift;
+
+        // zero-fill from the left
+        for (auto i = num_words() - num_words_to_shift; i < num_words(); i++) {
+            m_data[i] = 0;
+        }
+
+        return *this;
+    }
 };
 
 template <std::size_t N, typename Underlying>

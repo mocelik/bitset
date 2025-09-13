@@ -218,7 +218,7 @@ TEST(SmallBitset, bitwise_not) {
     ASSERT_TRUE(inverse[3]);
 }
 
-TEST(SmallBitset, bitwise_left_shift_first_bit) {
+TEST(SmallBitset, bitshift_left_first_bit) {
     for (auto i = 0; i < kNumBits; i++) {
         small_bitset<kNumBits> s;
         s.set(0);
@@ -228,7 +228,7 @@ TEST(SmallBitset, bitwise_left_shift_first_bit) {
     }
 }
 
-TEST(SmallBitset, bitwise_left_shift_nth_bit) {
+TEST(SmallBitset, bitshift_left_nth_bit) {
     for (auto i = 0; i < kNumBits - 1; i++) {
         small_bitset<kNumBits> s;
         s.set(i);
@@ -243,7 +243,7 @@ TEST(SmallBitset, bitwise_left_shift_nth_bit) {
     ASSERT_TRUE(s.none());
 }
 
-TEST(SmallBitset, bitwise_left_shift_multiple_bits) {
+TEST(SmallBitset, bitshift_left_multiple_bits) {
     for (auto i = 0; i < 8; i++) {
         small_bitset<kNumBits> s;
         constexpr auto kNumUnderlying = kNumBits/(8*sizeof(uint8_t));
@@ -257,7 +257,7 @@ TEST(SmallBitset, bitwise_left_shift_multiple_bits) {
         s = s << 1;
 
         // Check the i+1'th bit in each word
-        for (auto j = 0; j < kNumUnderlying; j++) {
+        for (auto j = 0; j < (i == 7 ? kNumUnderlying - 1 : kNumUnderlying); j++) {
             ASSERT_TRUE(s[i+(j*8) + 1]);
             ASSERT_FALSE(s[i+(j*8)]);
         }
@@ -272,7 +272,7 @@ TEST(SmallBitset, bitwise_left_shift_multiple_bits) {
 }
 
 
-TEST(SmallBitset, bitwise_left_shift_first_bit_assignment) {
+TEST(SmallBitset, bitshift_left_first_bit_assignment) {
     for (auto i = 0; i < kNumBits; i++) {
         small_bitset<kNumBits> s;
         s.set(0);
@@ -282,7 +282,7 @@ TEST(SmallBitset, bitwise_left_shift_first_bit_assignment) {
     }
 }
 
-TEST(SmallBitset, bitwise_left_shift_nth_bit_assignment) {
+TEST(SmallBitset, bitshift_left_nth_bit_assignment) {
     for (auto i = 0; i < kNumBits - 1; i++) {
         small_bitset<kNumBits> s;
         s.set(i);
@@ -297,7 +297,7 @@ TEST(SmallBitset, bitwise_left_shift_nth_bit_assignment) {
     ASSERT_TRUE(s.none());
 }
 
-TEST(SmallBitset, bitwise_left_shift_multiple_bits_assignment) {
+TEST(SmallBitset, bitshift_left_multiple_bits_assignment) {
     for (auto i = 0; i < 8; i++) {
         small_bitset<kNumBits> s;
         constexpr auto kNumUnderlying = kNumBits/(8*sizeof(uint8_t));
@@ -311,7 +311,7 @@ TEST(SmallBitset, bitwise_left_shift_multiple_bits_assignment) {
         s <<= 1;
 
         // Check the i+1'th bit in each word
-        for (auto j = 0; j < kNumUnderlying; j++) {
+        for (auto j = 0; j < (i == 7 ? kNumUnderlying - 1 : kNumUnderlying); j++) {
             ASSERT_TRUE(s[i+(j*8) + 1]);
             ASSERT_FALSE(s[i+(j*8)]);
         }
@@ -321,6 +321,112 @@ TEST(SmallBitset, bitwise_left_shift_multiple_bits_assignment) {
             ASSERT_EQ(s.count(), kNumUnderlying);
         } else {
             ASSERT_EQ(s.count(), kNumUnderlying - 1); // the leftmost 1 was discarded
+        }
+    }
+}
+
+TEST(SmallBitset, bitshift_right_last_bit) {
+    for (auto i = 0; i < kNumBits; i++) {
+        small_bitset<kNumBits> s;
+        s.set(kNumBits - 1);
+        s = s >> i;
+        ASSERT_TRUE(s[(kNumBits - 1) - i]) << "i = " << i << ", bitset: " << s;
+        ASSERT_EQ(s.count(), 1) << "i = " << i << ", bitset: " << s;
+    }
+}
+
+TEST(SmallBitset, bitshift_right_nth_bit) {
+    for (auto i = 1; i < kNumBits; i++) {
+        small_bitset<kNumBits> s;
+        s.set(i);
+        s = s >> 1;
+        ASSERT_TRUE(s[i-1]) << "i = " << i << ", bitset: " << s;
+        ASSERT_EQ(s.count(), 1) << "i = " << i << ", bitset: " << s;
+    }
+
+    small_bitset<kNumBits> s;
+    s.set(0);
+    s = s >> 1;
+    ASSERT_TRUE(s.none());
+}
+
+TEST(SmallBitset, bitshift_right_multiple_bits) {
+    for (auto i = 0; i < 8; i++) {
+        small_bitset<kNumBits> s;
+        constexpr auto kNumUnderlying = kNumBits/(8*sizeof(uint8_t));
+
+        // Set the i'th bit in each word
+        for (auto j = 0; j < kNumUnderlying; j++) {
+            s.set(i+(j*8));
+        }
+        ASSERT_EQ(s.count(), kNumUnderlying);
+
+        s = s >> 1;
+
+        // Check the i-1'th bit in each word
+        for (auto j = i == 0 ? 1 : 0; j < kNumUnderlying; j++) {
+            ASSERT_TRUE(s[(i+(j*8)) - 1]);
+            ASSERT_FALSE(s[i+(j*8)]);
+        }
+
+        // Verify that extraneous bits were not set
+        if (i != 0) {
+            ASSERT_EQ(s.count(), kNumUnderlying);
+        } else {
+            ASSERT_EQ(s.count(), kNumUnderlying - 1); // the rightmost 1 was discarded
+        }
+    }
+}
+
+TEST(SmallBitset, bitshift_right_first_bit_assignment) {
+    for (auto i = 0; i < kNumBits; i++) {
+        small_bitset<kNumBits> s;
+        s.set(kNumBits - 1);
+        s >>= i;
+        ASSERT_TRUE(s[(kNumBits - 1) - i]) << "i = " << i << ", bitset: " << s;
+        ASSERT_EQ(s.count(), 1) << "i = " << i << ", bitset: " << s;
+    }
+}
+
+TEST(SmallBitset, bitshift_right_nth_bit_assignment) {
+    for (auto i = 1; i < kNumBits; i++) {
+        small_bitset<kNumBits> s;
+        s.set(i);
+        s >>= 1;
+        ASSERT_TRUE(s[i-1]) << "i = " << i << ", bitset: " << s;
+        ASSERT_EQ(s.count(), 1) << "i = " << i << ", bitset: " << s;
+    }
+
+    small_bitset<kNumBits> s;
+    s.set(0);
+    s >>= 1;
+    ASSERT_TRUE(s.none());
+}
+
+TEST(SmallBitset, bitshift_right_multiple_bits_assignment) {
+    for (auto i = 0; i < 8; i++) {
+        small_bitset<kNumBits> s;
+        constexpr auto kNumUnderlying = kNumBits/(8*sizeof(uint8_t));
+
+        // Set the i'th bit in each word
+        for (auto j = 0; j < kNumUnderlying; j++) {
+            s.set(i+(j*8));
+        }
+        ASSERT_EQ(s.count(), kNumUnderlying);
+
+        s >>= 1;
+
+        // Check the i-1'th bit in each word
+        for (auto j = i == 0 ? 1 : 0; j < kNumUnderlying; j++) {
+            ASSERT_TRUE(s[(i+(j*8)) - 1]);
+            ASSERT_FALSE(s[i+(j*8)]);
+        }
+
+        // Verify that extraneous bits were not set
+        if (i != 0) {
+            ASSERT_EQ(s.count(), kNumUnderlying);
+        } else {
+            ASSERT_EQ(s.count(), kNumUnderlying - 1); // the rightmost 1 was discarded
         }
     }
 }
