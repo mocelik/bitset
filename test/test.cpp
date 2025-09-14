@@ -1,5 +1,7 @@
 #include "../small_bitset.hpp"
+#include <exception>
 #include <gtest/gtest.h>
+#include <stdexcept>
 
 using nonstd::small_bitset;
 
@@ -10,6 +12,105 @@ static constexpr std::size_t kNumBits{128};
 // Compile-time tests
 static_assert(sizeof(small_bitset<1, std::uint16_t>) > sizeof(small_bitset<1, std::uint8_t>),
               "Smaller Underlying type did not result in smaller object");
+
+TEST(SmallBitset, constructor_default) {
+    constexpr small_bitset<kNumBits> s; // constexpr
+    static_assert(noexcept(small_bitset<kNumBits>()), "Default constructor is not noexcept");
+}
+
+TEST(SmallBitset, constructor_unsignedlonglong) {
+    constexpr small_bitset<kNumBits> s_1(1);
+    ASSERT_TRUE(s_1[0]);
+
+    constexpr small_bitset<kNumBits> s_all(~0ull);
+    for (auto i = 0; i < 8 * sizeof(unsigned long long); i++) {
+        ASSERT_TRUE(s_all[i]);
+    }
+    for (auto i = 8 * sizeof(unsigned long long); i < kNumBits; i++) {
+        ASSERT_FALSE(s_all[i]);
+    }
+
+    constexpr small_bitset<1> s_overflow(~0ull);
+    ASSERT_TRUE(s_overflow[0]);
+}
+
+TEST(SmallBitset, constructor_string) {
+    std::string data("110010");
+    small_bitset<kNumBits> s(data); // 110010
+    ASSERT_FALSE(s[0]) << s;
+    ASSERT_TRUE(s[1]) << s;
+    ASSERT_FALSE(s[2]) << s;
+    ASSERT_FALSE(s[3]) << s;
+    ASSERT_TRUE(s[4]) << s;
+    ASSERT_TRUE(s[5]) << s;
+    for (auto i = 6; i < s.size(); i++) {
+        ASSERT_FALSE(s[i]) << "i: " << i << ", s: " << s;
+    }
+
+    small_bitset<kNumBits> s_offset(data, 2); // 0010
+    ASSERT_FALSE(s_offset[0]) << s_offset;
+    ASSERT_TRUE(s_offset[1]) << s_offset;
+    ASSERT_FALSE(s_offset[2]) << s_offset;
+    ASSERT_FALSE(s_offset[3]) << s_offset;
+    for (auto i = 4; i < s_offset.size(); i++) {
+        ASSERT_FALSE(s_offset[i]) << "i: " << i << ", s: " << s_offset;
+    }
+
+    small_bitset<kNumBits> s_offset_size(data, 2, 3); // 001
+    ASSERT_TRUE(s_offset_size[0]);
+    for (auto i = 1; i < s_offset_size.size(); i++) {
+        ASSERT_FALSE(s_offset_size[i]) << "i: " << i << ", s: " << s_offset_size;
+    }
+
+    ASSERT_THROW(small_bitset<kNumBits>(std::string("01X10")), std::invalid_argument);
+
+    // There should not be an exception thrown if the invalid value is out of range
+    ASSERT_NO_THROW(small_bitset<kNumBits>(std::string("01X10"), 0, 2));
+}
+
+TEST(SmallBitset, constructor_charptr) {
+    constexpr small_bitset<kNumBits> s("110010"); // 110010
+    ASSERT_FALSE(s[0]) << s;
+    ASSERT_TRUE(s[1]) << s;
+    ASSERT_FALSE(s[2]) << s;
+    ASSERT_FALSE(s[3]) << s;
+    ASSERT_TRUE(s[4]) << s;
+    ASSERT_TRUE(s[5]) << s;
+    for (auto i = 6; i < s.size(); i++) {
+        ASSERT_FALSE(s[i]) << "i: " << i << ", s: " << s;
+    }
+
+    constexpr small_bitset<kNumBits> s_offset("110010", 4); // 0010
+    ASSERT_FALSE(s_offset[0]) << s_offset;
+    ASSERT_TRUE(s_offset[1]) << s_offset;
+    ASSERT_FALSE(s_offset[2]) << s_offset;
+    ASSERT_FALSE(s_offset[3]) << s_offset;
+    for (auto i = 4; i < s_offset.size(); i++) {
+        ASSERT_FALSE(s_offset[i]) << "i: " << i << ", s: " << s_offset;
+    }
+
+    constexpr small_bitset<kNumBits> s_offset_size("11001", 3); // 001
+    ASSERT_TRUE(s_offset_size[0]);
+    for (auto i = 1; i < s_offset_size.size(); i++) {
+        ASSERT_FALSE(s_offset_size[i]) << "i: " << i << ", s: " << s_offset_size;
+    }
+
+    constexpr small_bitset<kNumBits> s_alt_char("XXOOXO", 6, 'O', 'X'); // 110010
+    ASSERT_FALSE(s[0]) << s;
+    ASSERT_TRUE(s[1]) << s;
+    ASSERT_FALSE(s[2]) << s;
+    ASSERT_FALSE(s[3]) << s;
+    ASSERT_TRUE(s[4]) << s;
+    ASSERT_TRUE(s[5]) << s;
+    for (auto i = 6; i < s_offset_size.size(); i++) {
+        ASSERT_FALSE(s_offset_size[i]) << "i: " << i << ", s: " << s_offset_size;
+    }
+
+    ASSERT_THROW(small_bitset<kNumBits>("01X10"), std::invalid_argument);
+
+    // There should not be an exception thrown if the invalid value is out of range
+    ASSERT_NO_THROW(small_bitset<kNumBits>("01X10", 2));
+}
 
 TEST(SmallBitset, bracket_operator) {
     small_bitset<kNumBits> s;

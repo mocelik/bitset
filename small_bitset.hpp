@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring> // memset
+#include <iterator>
 #include <stdexcept> // std::out_of_range
 #include <type_traits>
 #include <ostream>
@@ -28,7 +29,69 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     underlying_type_t m_data[num_words()] = {underlying_type_t(0)};
 
   public:
-    constexpr small_bitset() { reset(); }
+    constexpr small_bitset() noexcept { reset(); }
+
+    constexpr small_bitset( unsigned long long value ) noexcept {
+        reset();
+        for (auto i = 0; i < 8 * sizeof value && i < N; i++) {
+            if ((1ull << i) & value) {
+                set(i, true);
+            }
+        }
+    }
+
+    template< class CharT, class Traits, class Alloc >
+    explicit small_bitset( const std::basic_string<CharT, Traits, Alloc>& str,
+                            typename std::basic_string<CharT, Traits, Alloc>::size_type pos = 0,
+                            typename std::basic_string<CharT, Traits, Alloc>::size_type n = std::basic_string<CharT, Traits, Alloc>::npos,
+                            CharT zero = CharT('0'),
+                            CharT one = CharT('1') ) {
+        if (pos > str.size()) {
+            throw std::out_of_range("pos > str.size()");
+        }
+
+        auto i = 0;
+        auto reverse_start = std::reverse_iterator(n == str.npos ? str.end() : str.begin() + pos + n);
+        auto reverse_end = std::reverse_iterator(str.begin() + pos);
+        auto iter = reverse_start;
+        while (iter != reverse_end) {
+            if (Traits::eq(*iter, zero)) {
+                set(i, 0);
+            } else if (Traits::eq(*iter, one)) {
+                set(i, 1);
+            } else {
+                throw std::invalid_argument(std::string("Unexpected character ") + *iter + " is neither zero (" + zero + ") or one (" + one + ")");
+            }
+            ++i;
+            ++iter;
+        }
+    }
+
+    template< class CharT >
+    constexpr explicit small_bitset( const CharT* str, std::size_t n = std::size_t(-1),
+                 CharT zero = CharT('0'), CharT one = CharT('1') ) {
+        const auto len = std::char_traits<CharT>::length(str);
+        const auto end = str + len;
+        if (n == std::basic_string<CharT>::npos || n == std::size_t(-1)) {
+            n = len;
+        }
+
+        auto iter = std::reverse_iterator(end);
+        auto reverse_end = std::reverse_iterator(end - n);
+
+        auto i = 0;
+        while (iter != reverse_end) {
+            if (*iter == zero) {
+                set(i, 0);
+            } else if (*iter == one) {
+                set(i, 1);
+            } else {
+                throw std::invalid_argument(std::string("Unexpected character ") + *iter + " is neither zero (" + zero + ") or one (" + one + ")");
+            }
+            ++i;
+            ++iter;
+        }
+    }
 
     constexpr bool operator[](std::size_t i) const {
         return (m_data[underlying_index(i)] &
@@ -36,7 +99,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
                underlying_type_t(0);
     }
 
-    small_bitset &set(std::size_t pos, bool value = true) {
+    constexpr small_bitset &set(std::size_t pos, bool value = true) {
         if (value) {
             m_data[underlying_index(pos)] |=
                 underlying_type_t(1 << (pos % num_underlying_bits()));
@@ -112,7 +175,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     }
 
     constexpr small_bitset &reset() noexcept {
-        std::memset(m_data, 0, sizeof m_data);
+        for (auto i = 0; i < num_words(); i++) {
+            m_data[i] = 0;
+        }
         return *this;
     }
 
