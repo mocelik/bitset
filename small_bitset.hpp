@@ -258,6 +258,27 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
 
         return *this;
     }
+
+    constexpr bool operator==( const small_bitset& rhs) const noexcept {
+        if constexpr (N % num_underlying_bits() == 0) {
+            for (auto i = 0; i < num_words(); i++) {
+                if (m_data[i] != rhs.m_data[i]) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            for (auto i = 0; i < num_words() - 1; i++) {
+                if (m_data[i] != rhs.m_data[i]) {
+                    return false;
+                }
+            }
+            constexpr Underlying ones_mask = (1u << (N % num_underlying_bits())) - 1;
+            return (m_data[num_words() - 1] & ones_mask) == (rhs.m_data[num_words() -1 ] & ones_mask);
+        }
+    }
+
+    constexpr bool operator!=(const small_bitset& rhs) const noexcept {return !(*this == rhs);}
 };
 
 template <std::size_t N, typename Underlying>

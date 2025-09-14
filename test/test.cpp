@@ -531,3 +531,33 @@ TEST(SmallBitset, bitshift_right_multiple_bits_assignment) {
         }
     }
 }
+
+TEST(SmallBitset, operator_equals_1) {
+    small_bitset<1> s1(1);
+    small_bitset<1> s2(1);
+    small_bitset<1> s3(0);
+    ASSERT_EQ(s1, s2);
+    ASSERT_NE(s1, s3);
+}
+
+TEST(SmallBitset, operator_equals_16) {
+    small_bitset<16> s1(1 << 8 | 1);
+    small_bitset<16> s2(1 << 8 | 1);
+    small_bitset<16> s3(1);
+    small_bitset<16> s4(1 << 8);
+    ASSERT_EQ(s1, s2);
+    ASSERT_NE(s1, s3);
+    ASSERT_NE(s1, s4);
+    ASSERT_NE(s3, s4);
+}
+
+TEST(SmallBitset, operator_equals_9) {
+    small_bitset<9> s1(1 << 8 | 1);
+    small_bitset<9> s2(1 << 8 | 1);
+    small_bitset<9> s3(1);
+    small_bitset<9> s4(1 << 8);
+    ASSERT_EQ(s1, s2);
+    ASSERT_NE(s1, s3);
+    ASSERT_NE(s1, s4);
+    ASSERT_NE(s3, s4);
+}
