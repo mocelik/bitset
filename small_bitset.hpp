@@ -165,7 +165,12 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return *this;
     }
 
-    bool test(std::size_t pos) const { return this->operator[](pos); }
+    bool test(std::size_t pos) const {
+        if (pos >= N) {
+            throw std::out_of_range("bitset::test: pos out of range");
+        }
+        return this->operator[](pos);
+    }
 
     constexpr std::size_t count() const noexcept {
         std::size_t cnt{0};
@@ -301,7 +306,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     template<class CharT = char, class Traits = std::char_traits<CharT>, class Allocator = std::allocator<CharT>>
     std::basic_string<CharT, Traits, Allocator> to_string( CharT zero = CharT('0'), CharT one = CharT('1') ) const {
         std::basic_string<CharT, Traits, Allocator> str;
-        str.reserve(size() + 1);
+        str.reserve(size());
         for (auto i = size() - 1; i > 0; i--) {
             str.append(1, this->operator[](i) ? one : zero);
         }

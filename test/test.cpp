@@ -261,6 +261,8 @@ TEST(SmallBitset, test) {
         s.set(i, false);
         ASSERT_FALSE(s.test(i)) << "i: " << i;
     }
+
+    ASSERT_THROW(s.test(kNumBits), std::out_of_range);
 }
 
 TEST(SmallBitset, count) {
