@@ -1,4 +1,5 @@
 #include "../small_bitset.hpp"
+#include <algorithm>
 #include <exception>
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -560,4 +561,17 @@ TEST(SmallBitset, operator_equals_9) {
     ASSERT_NE(s1, s3);
     ASSERT_NE(s1, s4);
     ASSERT_NE(s3, s4);
+}
+
+TEST(SmallBitset, to_string) {
+    std::string data("101010101");
+    data.insert(0, kNumBits - data.size(), '0');
+
+    small_bitset<kNumBits> s(data);
+    ASSERT_EQ(data, s.to_string());
+
+    std::string modified_data(data);
+    std::replace(modified_data.begin(), modified_data.end(), '1', 'X');
+    std::replace(modified_data.begin(), modified_data.end(), '0', 'O');
+    ASSERT_EQ(modified_data, s.to_string('O','X'));
 }

@@ -259,6 +259,17 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return *this;
     }
 
+    template<class CharT = char, class Traits = std::char_traits<CharT>, class Allocator = std::allocator<CharT>>
+    std::basic_string<CharT, Traits, Allocator> to_string( CharT zero = CharT('0'), CharT one = CharT('1') ) const {
+        std::basic_string<CharT, Traits, Allocator> str;
+        str.reserve(size() + 1);
+        for (auto i = size() - 1; i > 0; i--) {
+            str.append(1, this->operator[](i) ? one : zero);
+        }
+        str.append(1, this->operator[](0) ? one : zero);
+        return str;
+    }
+
     constexpr bool operator==( const small_bitset& rhs) const noexcept {
         if constexpr (N % num_underlying_bits() == 0) {
             for (auto i = 0; i < num_words(); i++) {
@@ -281,12 +292,10 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     constexpr bool operator!=(const small_bitset& rhs) const noexcept {return !(*this == rhs);}
 };
 
-template <std::size_t N, typename Underlying>
-std::ostream& operator<<(std::ostream& os, small_bitset<N, Underlying> bits) {
-    for (auto i = bits.size() - 1; i > 0; i--) {
-        os << bits[i];
-    }
-    return os << bits[0];
+template< class CharT, class Traits, std::size_t N, typename Underlying >
+std::basic_ostream<CharT, Traits>& operator<<( std::basic_ostream<CharT, Traits>& os, small_bitset<N, Underlying> bits) {
+    return os << bits.to_string(std::use_facet<std::ctype<CharT>>(os.getloc()).widen('0'),
+                                std::use_facet<std::ctype<CharT>>(os.getloc()).widen('1'));
 }
 
 } // namespace nonstd
