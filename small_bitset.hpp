@@ -270,6 +270,50 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return str;
     }
 
+    constexpr unsigned long to_ulong() const {
+        constexpr auto kNumBitsInUnsignedLong = 8 * sizeof(unsigned long);
+        if (N < kNumBitsInUnsignedLong) {
+            unsigned long value = 0;
+            for (auto i = 0; i < size(); i++) {
+                value |= this->operator[](i) << i;
+            }
+            return value;
+        }
+
+        unsigned long value = 0;
+        for (auto i = 0; i < kNumBitsInUnsignedLong; i++) {
+            value |= ((unsigned long)this->operator[](i)) << i;
+        }
+        for (auto i = kNumBitsInUnsignedLong; i < size(); i++) {
+            if (this->operator[](i)) {
+                throw std::overflow_error("bitset to_ulong overflow error");
+            }
+        }
+        return value;
+    }
+
+    constexpr unsigned long long to_ullong() const {
+        constexpr auto kNumBitsInUnsignedLongLong = 8 * sizeof(unsigned long long);
+        if (N < kNumBitsInUnsignedLongLong) {
+            unsigned long long value = 0;
+            for (auto i = 0; i < size(); i++) {
+                value |= this->operator[](i) << i;
+            }
+            return value;
+        }
+
+        unsigned long long value = 0;
+        for (auto i = 0; i < kNumBitsInUnsignedLongLong; i++) {
+            value |= ((unsigned long long)this->operator[](i)) << i;
+        }
+        for (auto i = kNumBitsInUnsignedLongLong; i < size(); i++) {
+            if (this->operator[](i)) {
+                throw std::overflow_error("bitset to_ulong overflow error");
+            }
+        }
+        return value;
+    }
+
     constexpr bool operator==( const small_bitset& rhs) const noexcept {
         if constexpr (N % num_underlying_bits() == 0) {
             for (auto i = 0; i < num_words(); i++) {

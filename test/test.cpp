@@ -575,3 +575,25 @@ TEST(SmallBitset, to_string) {
     std::replace(modified_data.begin(), modified_data.end(), '0', 'O');
     ASSERT_EQ(modified_data, s.to_string('O','X'));
 }
+
+TEST(SmallBitset, to_ulong) {
+    constexpr auto kNumBitsInUnsignedLong = 8 * sizeof(unsigned long);
+    constexpr auto value = 1ul << (kNumBitsInUnsignedLong - 1);
+    small_bitset<kNumBits> s(value);
+    ASSERT_EQ(s.to_ulong(), value) << s;
+
+    s.flip();
+    static_assert(kNumBits > kNumBitsInUnsignedLong);
+    ASSERT_THROW(s.to_ulong(), std::overflow_error);
+}
+
+TEST(SmallBitset, to_ullong) {
+    constexpr auto kNumBitsInUnsignedLongLong = 8 * sizeof(unsigned long long);
+    constexpr auto value = 1ul << (kNumBitsInUnsignedLongLong - 1);
+    small_bitset<kNumBits> s(value);
+    ASSERT_EQ(s.to_ullong(), value) << s;
+
+    s.flip();
+    static_assert(kNumBits > kNumBitsInUnsignedLongLong);
+    ASSERT_THROW(s.to_ullong(), std::overflow_error);
+}
