@@ -120,6 +120,67 @@ TEST(SmallBitset, bracket_operator) {
     }
 }
 
+TEST(SmallBitset, reference_operator_eq_bool) {
+    small_bitset<kNumBits> s;
+    s[0] = true;
+    ASSERT_TRUE(s[0]);
+    s[0] = false;
+    ASSERT_FALSE(s[0]);
+
+    s[2] = true;
+    ASSERT_TRUE(s[2]);
+    s[2] = false;
+    ASSERT_FALSE(s[2]);
+
+    s[8] = true;
+    ASSERT_TRUE(s[8]);
+    s[8] = false;
+    ASSERT_FALSE(s[8]);
+
+    s[kNumBits - 1] = true;
+    ASSERT_TRUE(s[kNumBits - 1]);
+    s[kNumBits - 1] = false;
+    ASSERT_FALSE(s[kNumBits - 1]);
+
+    ASSERT_EQ(s.count(), 0);
+}
+
+TEST(SmallBitset, reference_operator_eq_reference) {
+    small_bitset<kNumBits> s;
+    s[0] = true;
+
+    ASSERT_TRUE(s[0]);
+
+    s[2] = s[0];
+    ASSERT_TRUE(s[2]);
+    s[2] = s[1];
+    ASSERT_FALSE(s[2]);
+
+    s[8] = s[0];
+    ASSERT_TRUE(s[8]);
+    s[8] = s[1];
+    ASSERT_FALSE(s[8]);
+
+    s[kNumBits - 1] = s[0];
+    ASSERT_TRUE(s[kNumBits - 1]);
+    s[kNumBits - 1] = s[1];
+    ASSERT_FALSE(s[kNumBits - 1]);
+
+    ASSERT_EQ(s.count(), 1);
+}
+
+TEST(SmallBitset, reference_operator_not) {
+    small_bitset<kNumBits> s;
+    ASSERT_TRUE(~s[0]);
+}
+
+TEST(SmallBitset, reference_operator_flip) {
+    small_bitset<kNumBits> s;
+    ASSERT_TRUE(s[0].flip());
+    ASSERT_FALSE(s[0].flip());
+}
+
+
 TEST(SmallBitset, initialize_to_false) {
     small_bitset<kNumBits> s;
     for (std::size_t i = 0; i < s.size(); i++) {

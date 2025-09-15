@@ -93,10 +93,49 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         }
     }
 
+    class reference {
+    public:
+        constexpr reference(const reference&) = default;
+
+        constexpr reference& operator=(bool x) noexcept {
+            m_parent.set(m_pos, x);
+            return *this;
+        }
+        constexpr reference& operator=(const reference& x) noexcept {
+            m_parent.set(m_pos, x);
+            return *this;
+        }
+
+        constexpr operator bool() const noexcept {
+            const small_bitset& parent = m_parent;
+            return parent[m_pos];
+        }
+        constexpr bool operator~() const noexcept {
+            const small_bitset& parent = m_parent;
+            return !parent[m_pos];
+        }
+
+        constexpr reference& flip() noexcept {
+            m_parent.flip(m_pos);
+            return *this;
+        }
+
+    private:
+        friend small_bitset;
+        constexpr reference(small_bitset& parent, std::size_t pos) : m_parent(parent), m_pos(pos) {}
+
+        small_bitset& m_parent;
+        std::size_t m_pos;
+    };
+
     constexpr bool operator[](std::size_t i) const {
         return (m_data[underlying_index(i)] &
                 underlying_type_t(1 << (i % num_underlying_bits()))) !=
                underlying_type_t(0);
+    }
+
+    constexpr reference operator[](std::size_t i) {
+        return reference(*this, i);
     }
 
     constexpr small_bitset &set(std::size_t pos, bool value = true) {
