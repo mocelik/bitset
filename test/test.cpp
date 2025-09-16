@@ -709,3 +709,20 @@ TEST(SmallBitset, free_operator_bitand) {
     ASSERT_EQ(s1 & ones, s1);
     ASSERT_EQ(s1 & zero, zero);
 }
+
+
+TEST(SmallBitset, free_operator_bitor) {
+    constexpr small_bitset<kNumBits> zero;
+    constexpr small_bitset<kNumBits> ones{~zero};
+
+    ASSERT_EQ(zero | zero, zero);
+    ASSERT_EQ(zero | ones, ones);
+    ASSERT_EQ(ones | zero, ones);
+    ASSERT_EQ(ones | ones, ones);
+
+    constexpr small_bitset<kNumBits> s1{1 | 1 << 8};
+    constexpr small_bitset<kNumBits> s2{1 | 1 << 8 | 1 << 16};
+    ASSERT_EQ(s1 | s2, s2);
+    ASSERT_EQ(s1 | ones, ones);
+    ASSERT_EQ(s1 | zero, s1);
+}
