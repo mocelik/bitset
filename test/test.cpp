@@ -191,6 +191,7 @@ TEST(SmallBitset, set) {
     small_bitset<kNumBits> s;
     s.set();
     ASSERT_EQ(s.count(), kNumBits);
+    ASSERT_TRUE(s.all());
 }
 
 TEST(SmallBitset, set_pos) {
@@ -226,6 +227,12 @@ TEST(SmallBitset, reset) {
 
 TEST(SmallBitset, flip_all) {
     small_bitset<kNumBits> s;
+
+    ASSERT_TRUE(s.none());
+    s.flip();
+    ASSERT_TRUE(s.all());
+    s.flip();
+    ASSERT_FALSE(s.all());
 
     for (int i = 0; i < s.size(); i++) {
         s.set(i, true);
@@ -644,6 +651,12 @@ TEST(SmallBitset, operator_equals_9) {
     ASSERT_NE(s1, s3);
     ASSERT_NE(s1, s4);
     ASSERT_NE(s3, s4);
+}
+
+TEST(SmallBitset, operator_equals_10) {
+    small_bitset<10> s1;
+    small_bitset<10> s2;
+    ASSERT_EQ(s1.flip(), s2.set());
 }
 
 TEST(SmallBitset, to_string) {

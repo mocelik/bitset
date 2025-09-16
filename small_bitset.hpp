@@ -144,7 +144,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
             m_data[i] = ~m_data[i];
         }
         if constexpr (N % 8 != 0) {
-            m_data[num_words() - 1] = (1 << N) - 1;
+            m_data[num_words() - 1] = (1u << (N  % num_underlying_bits())) - 1u;
         }
         return *this;
     }
@@ -166,6 +166,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     constexpr small_bitset &flip() noexcept {
         for (auto i = 0; i < num_words(); i++) {
             m_data[i] = ~m_data[i];
+        }
+        if constexpr (N % 8 != 0) {
+            m_data[num_words() - 1] &= (1u << (N  % num_underlying_bits())) - 1u;
         }
         return *this;
     }
