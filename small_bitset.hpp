@@ -239,7 +239,12 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return *this;
     }
 
-    constexpr small_bitset &reset(std::size_t pos) { return set(pos, false); }
+    constexpr small_bitset &reset(std::size_t pos) {
+        if (pos >= N) {
+            throw std::out_of_range("bitset::reset: pos out of range");
+        }
+        return set(pos, false);
+    }
 
 
     constexpr small_bitset& operator&=( const small_bitset& other ) noexcept {

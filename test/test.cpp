@@ -211,6 +211,20 @@ TEST(SmallBitset, set_pos) {
     ASSERT_THROW(s.set(kNumBits, true), std::out_of_range);
 }
 
+TEST(SmallBitset, reset) {
+    small_bitset<kNumBits> s;
+    s.set();
+    ASSERT_EQ(s.count(), kNumBits);
+    s.reset();
+    ASSERT_EQ(s.count(), 0);
+    s[0] = true;
+    ASSERT_EQ(s[0], true);
+    s.reset(0);
+    ASSERT_EQ(s[0], false);
+
+    ASSERT_THROW(s.reset(kNumBits), std::out_of_range);
+}
+
 TEST(SmallBitset, flip_all) {
     small_bitset<kNumBits> s;
 
