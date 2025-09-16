@@ -190,6 +190,12 @@ TEST(SmallBitset, initialize_to_false) {
 
 TEST(SmallBitset, set) {
     small_bitset<kNumBits> s;
+    s.set();
+    ASSERT_EQ(s.count(), kNumBits);
+}
+
+TEST(SmallBitset, set_pos) {
+    small_bitset<kNumBits> s;
     for (int i = 0; i < s.size(); i++) {
         s.set(i, true);
         ASSERT_TRUE(s[i]) << "i: " << i;
@@ -202,6 +208,7 @@ TEST(SmallBitset, set) {
         s.set(i, false);
         ASSERT_FALSE(s[i]) << "i: " << i;
     }
+    ASSERT_THROW(s.set(kNumBits, true), std::out_of_range);
 }
 
 TEST(SmallBitset, flip_all) {

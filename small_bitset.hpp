@@ -138,7 +138,21 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return reference(*this, i);
     }
 
+    constexpr small_bitset& set() noexcept {
+        for (auto i = 0; i < num_words(); i++) {
+            m_data[i] = 0;
+            m_data[i] = ~m_data[i];
+        }
+        if constexpr (N % 8 != 0) {
+            m_data[num_words() - 1] = (1 << N) - 1;
+        }
+        return *this;
+    }
+
     constexpr small_bitset &set(std::size_t pos, bool value = true) {
+        if (pos >= N) {
+            throw std::out_of_range("bitset::set: pos out of range.");
+        }
         if (value) {
             m_data[underlying_index(pos)] |=
                 underlying_type_t(1 << (pos % num_underlying_bits()));
