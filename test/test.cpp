@@ -693,3 +693,19 @@ TEST(SmallBitset, to_ullong) {
     static_assert(kNumBits > kNumBitsInUnsignedLongLong);
     ASSERT_THROW(s.to_ullong(), std::overflow_error);
 }
+
+TEST(SmallBitset, free_operator_bitand) {
+    constexpr small_bitset<kNumBits> zero;
+    constexpr small_bitset<kNumBits> ones{~zero};
+
+    ASSERT_EQ(zero & zero, zero);
+    ASSERT_EQ(zero & ones, zero);
+    ASSERT_EQ(ones & zero, zero);
+    ASSERT_EQ(ones & ones, ones);
+
+    constexpr small_bitset<kNumBits> s1{1 | 1 << 8};
+    constexpr small_bitset<kNumBits> s2{1 | 1 << 8 | 1 << 16};
+    ASSERT_EQ(s1 & s2, s1);
+    ASSERT_EQ(s1 & ones, s1);
+    ASSERT_EQ(s1 & zero, zero);
+}

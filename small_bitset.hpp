@@ -395,7 +395,19 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     }
 
     constexpr bool operator!=(const small_bitset& rhs) const noexcept {return !(*this == rhs);}
+
+    friend constexpr small_bitset operator&( const small_bitset& lhs,
+                          const small_bitset& rhs ) {
+        small_bitset value;
+        for (auto i = 0; i < num_words(); i++) {
+            value.m_data[i] = lhs.m_data[i] & rhs.m_data[i];
+        }
+        return value;
+    }
 };
+
+
+
 
 template< class CharT, class Traits, std::size_t N, typename Underlying >
 std::basic_ostream<CharT, Traits>& operator<<( std::basic_ostream<CharT, Traits>& os, small_bitset<N, Underlying> bits) {
