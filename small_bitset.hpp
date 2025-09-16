@@ -1,4 +1,3 @@
-
 #include <cstddef>
 #include <cstdint>
 #include <cstring> // memset
@@ -97,12 +96,12 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     public:
         constexpr reference(const reference&) = default;
 
-        constexpr reference& operator=(bool x) noexcept {
-            m_parent.set(m_pos, x);
+        constexpr reference& operator=(bool value) noexcept {
+            m_parent.set(m_pos, value);
             return *this;
         }
-        constexpr reference& operator=(const reference& x) noexcept {
-            m_parent.set(m_pos, x);
+        constexpr reference& operator=(const reference& value) noexcept {
+            m_parent.set(m_pos, value);
             return *this;
         }
 
@@ -116,13 +115,14 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         }
 
         constexpr reference& flip() noexcept {
-            m_parent.flip(m_pos);
+            m_parent.set(m_pos, !*this);
             return *this;
         }
 
     private:
         friend small_bitset;
-        constexpr reference(small_bitset& parent, std::size_t pos) : m_parent(parent), m_pos(pos) {}
+        constexpr reference(small_bitset& parent, std::size_t pos) noexcept
+            : m_parent(parent), m_pos(pos) {}
 
         small_bitset& m_parent;
         std::size_t m_pos;
@@ -155,10 +155,10 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         }
         if (value) {
             m_data[underlying_index(pos)] |=
-                underlying_type_t(1 << (pos % num_underlying_bits()));
+                underlying_type_t(1ull << (pos % num_underlying_bits()));
         } else {
             m_data[underlying_index(pos)] &=
-                ~underlying_type_t(1 << (pos % num_underlying_bits()));
+                ~underlying_type_t(1ull << (pos % num_underlying_bits()));
         }
         return *this;
     }
@@ -378,19 +378,14 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     }
 
     constexpr bool operator==( const small_bitset& rhs) const noexcept {
-        if constexpr (N % num_underlying_bits() == 0) {
-            for (auto i = 0; i < num_words(); i++) {
-                if (m_data[i] != rhs.m_data[i]) {
-                    return false;
-                }
+        for (auto i = 0; i < num_words(); i++) {
+            if (m_data[i] != rhs.m_data[i]) {
+                return false;
             }
+        }
+        if constexpr (N % num_underlying_bits() == 0) {
             return true;
         } else {
-            for (auto i = 0; i < num_words() - 1; i++) {
-                if (m_data[i] != rhs.m_data[i]) {
-                    return false;
-                }
-            }
             constexpr Underlying ones_mask = (1u << (N % num_underlying_bits())) - 1;
             return (m_data[num_words() - 1] & ones_mask) == (rhs.m_data[num_words() -1 ] & ones_mask);
         }

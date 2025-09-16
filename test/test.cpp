@@ -1,6 +1,5 @@
 #include "../small_bitset.hpp"
 #include <algorithm>
-#include <exception>
 #include <gtest/gtest.h>
 #include <stdexcept>
 
