@@ -5,6 +5,7 @@
 #include <stdexcept> // std::out_of_range
 #include <type_traits>
 #include <ostream>
+#include <istream>
 
 namespace nonstd {
 
@@ -423,19 +424,46 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return value;
     }
 
+
+    template< class CharT, class Traits>
+    friend std::basic_ostream<CharT, Traits>& operator<<( std::basic_ostream<CharT, Traits>& os, const small_bitset& bits) {
+        return os << bits.to_string(std::use_facet<std::ctype<CharT>>(os.getloc()).widen('0'),
+                                    std::use_facet<std::ctype<CharT>>(os.getloc()).widen('1'));
+    }
+
+    template< class CharT, class Traits>
+    friend std::basic_istream<CharT, Traits>& operator>>( std::basic_istream<CharT, Traits>& is, small_bitset& bits ) {
+        int i{N - 1};
+        while (i >= 0) {
+            CharT input;
+            is >> input;
+
+            if (!is.good()) {
+                break;
+            }
+            if (input == is.widen('0')) {
+                bits[i] = 0;
+            } else if (input == is.widen('1')) {
+                bits[i] = 1;
+            } else {
+                is.setstate(std::ios_base::failbit);
+                break;
+            }
+            --i;
+        }
+        if (i >= 0) { // if incomplete read
+            bits >>= (i + 1);
+        }
+        return is;
+    }
+
     friend struct std::hash<small_bitset>;
 };
-
-
-template< class CharT, class Traits, std::size_t N, typename Underlying >
-std::basic_ostream<CharT, Traits>& operator<<( std::basic_ostream<CharT, Traits>& os, small_bitset<N, Underlying> bits) {
-    return os << bits.to_string(std::use_facet<std::ctype<CharT>>(os.getloc()).widen('0'),
-                                std::use_facet<std::ctype<CharT>>(os.getloc()).widen('1'));
-}
 
 } // namespace nonstd
 
 namespace std {
+
 template<size_t N, typename Underlying>
 struct hash<nonstd::small_bitset<N, Underlying>>
 {

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <gtest/gtest.h>
 #include <stdexcept>
+#include <sstream>
 
 using nonstd::small_bitset;
 
@@ -741,6 +742,50 @@ TEST(SmallBitset, free_operator_bitxor) {
     ASSERT_EQ(s1 ^ s2, 1 | 1 << 16 );
     ASSERT_EQ(s1 ^ ones, ~s1);
     ASSERT_EQ(s1 ^ zero, s1);
+}
+
+TEST(SmallBitset, operator_stream_insert_extract){
+    std::string data("1111000010101010");
+    data.insert(0, kNumBits - data.size(), '0');
+
+    small_bitset<kNumBits> bits(data);
+
+    std::stringstream ss;
+    ss << bits;
+    ASSERT_EQ(ss.str(), data);
+
+    small_bitset<kNumBits> bits2;
+    ss >> bits2;
+    ASSERT_EQ(bits, bits2);
+}
+
+TEST(SmallBitset, operator_stream_extract_invalid){
+    std::stringstream ss;
+    ss << "10X101"; // The X is invalid
+
+    small_bitset<3> bitset;
+    ss >> bitset; // Read 10X
+    ASSERT_TRUE(ss.fail()); // X is invalid
+
+    ss.clear(); // clear the fail bit
+    ss >> bitset; // Read 101
+    ASSERT_TRUE(ss.good());
+    ASSERT_TRUE(bitset[0]);
+    ASSERT_FALSE(bitset[1]);
+    ASSERT_TRUE(bitset[2]);
+}
+
+TEST(SmallBitset, operator_stream_extraction_reset){
+    std::stringstream ss;
+    ss << "101";
+
+    small_bitset<4> bitset(1 << 3);
+    ss >> bitset; // Read 101, zero-extend on left with 0's
+
+    ASSERT_TRUE(bitset[0]) << bitset;
+    ASSERT_FALSE(bitset[1]) << bitset;
+    ASSERT_TRUE(bitset[2]) << bitset;
+    ASSERT_FALSE(bitset[3]) << bitset;
 }
 
 TEST(SmallBitset, hash) {
