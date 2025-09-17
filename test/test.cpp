@@ -742,3 +742,16 @@ TEST(SmallBitset, free_operator_bitxor) {
     ASSERT_EQ(s1 ^ ones, ~s1);
     ASSERT_EQ(s1 ^ zero, s1);
 }
+
+TEST(SmallBitset, hash) {
+    auto big_hash = std::hash<small_bitset<kNumBits>>();
+
+    ASSERT_EQ(big_hash(small_bitset<kNumBits>(1)), big_hash(small_bitset<kNumBits>(1)));
+    ASSERT_NE(big_hash(small_bitset<kNumBits>(1)), big_hash(small_bitset<kNumBits>(0)));
+    ASSERT_NE(big_hash(small_bitset<kNumBits>(1)), big_hash(small_bitset<kNumBits>(2)));
+
+    auto small_hash = std::hash<small_bitset<32>>();
+    ASSERT_EQ(small_hash(small_bitset<32>(1)), small_hash(small_bitset<32>(1)));
+    ASSERT_NE(small_hash(small_bitset<32>(1)), small_hash(small_bitset<32>(0)));
+    ASSERT_NE(small_hash(small_bitset<32>(1)), small_hash(small_bitset<32>(2)));
+}

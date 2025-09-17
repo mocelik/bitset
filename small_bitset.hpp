@@ -422,9 +422,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         }
         return value;
     }
+
+    friend struct std::hash<small_bitset>;
 };
-
-
 
 
 template< class CharT, class Traits, std::size_t N, typename Underlying >
@@ -434,3 +434,23 @@ std::basic_ostream<CharT, Traits>& operator<<( std::basic_ostream<CharT, Traits>
 }
 
 } // namespace nonstd
+
+namespace std {
+template<size_t N, typename Underlying>
+struct hash<nonstd::small_bitset<N, Underlying>>
+{
+    constexpr size_t operator()(const nonstd::small_bitset<N, Underlying>& s) const noexcept
+    {
+        if constexpr (N < (8 * sizeof(unsigned long long))) {
+            return hash<unsigned long long>()(s.to_ullong());
+        }
+
+        // boost::hash_combine algorithm
+        size_t value = hash<Underlying>()(s.m_data[0]);
+        for (auto i = 1; i < s.num_words(); i++) {
+            value ^= hash<Underlying>()(s.m_data[i]) + 0x9e3779b9 + (value << 6) + (value >> 2);
+        }
+        return value;
+    }
+};
+}
