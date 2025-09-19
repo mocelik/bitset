@@ -29,6 +29,10 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     underlying_type_t m_data[num_words()] = {underlying_type_t(0)};
     static constexpr underlying_type_t m_last_word_mask = (N % num_underlying_bits() != 0) ? (1 << (N % num_underlying_bits())) - 1 : ~0;
 
+    static constexpr underlying_type_t mask(std::size_t pos) noexcept {
+        return underlying_type_t{1} << (pos % num_underlying_bits());
+    }
+
     public:
     constexpr small_bitset() noexcept { reset(); }
 
@@ -82,11 +86,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
 
         auto i = 0;
         while (iter != reverse_end) {
-            if (*iter == zero) {
-                set(i, 0);
-            } else if (*iter == one) {
+            if (*iter == one) {
                 set(i, 1);
-            } else {
+            } else if (*iter != zero) {
                 throw std::invalid_argument(std::string("Unexpected character ") + *iter + " is neither zero (" + zero + ") or one (" + one + ")");
             }
             ++i;
@@ -131,9 +133,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     };
 
     constexpr bool operator[](std::size_t i) const {
-        return (m_data[underlying_index(i)] &
-                underlying_type_t(1 << (i % num_underlying_bits()))) !=
-               underlying_type_t(0);
+        return (m_data[underlying_index(i)] & mask(i)) != underlying_type_t(0);
     }
 
     constexpr reference operator[](std::size_t i) {
@@ -156,11 +156,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
             throw std::out_of_range("bitset::set: pos out of range.");
         }
         if (value) {
-            m_data[underlying_index(pos)] |=
-                underlying_type_t(1ull << (pos % num_underlying_bits()));
+            m_data[underlying_index(pos)] |= mask(pos);
         } else {
-            m_data[underlying_index(pos)] &=
-                ~underlying_type_t(1ull << (pos % num_underlying_bits()));
+            m_data[underlying_index(pos)] &= ~mask(pos);
         }
         return *this;
     }
@@ -170,7 +168,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
             m_data[i] = ~m_data[i];
         }
         if constexpr (N % 8 != 0) {
-            m_data[num_words() - 1] &= (1u << (N  % num_underlying_bits())) - 1u;
+            m_data[num_words() - 1] &= m_last_word_mask;
         }
         return *this;
     }
@@ -203,11 +201,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     constexpr std::size_t size() const noexcept { return N; }
 
     constexpr bool all() const noexcept {
-        constexpr underlying_type_t all_ones =
-            ~static_cast<underlying_type_t>(0);
+        constexpr underlying_type_t all_ones = ~underlying_type_t{0};
         for (auto i = 0; i < num_words() - 1; ++i) {
             if (std::memcmp(&m_data[i], &all_ones, sizeof all_ones) != 0) {
-
                 return false;
             }
         }

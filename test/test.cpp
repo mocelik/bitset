@@ -17,7 +17,7 @@ static_assert(sizeof(small_bitset<1, std::uint16_t>) > sizeof(small_bitset<1, st
 template <class T>
 class SmallBitset : public testing::Test {};
 
-using UnsignedTypes = ::testing::Types<std::uint8_t, std::uint64_t>;
+using UnsignedTypes = ::testing::Types<std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t>;
 TYPED_TEST_SUITE(SmallBitset, UnsignedTypes);
 
 TYPED_TEST(SmallBitset, constructor_default) {
@@ -50,6 +50,7 @@ TYPED_TEST(SmallBitset, constructor_string) {
     ASSERT_FALSE(s[3]) << s;
     ASSERT_TRUE(s[4]) << s;
     ASSERT_TRUE(s[5]) << s;
+    EXPECT_EQ(s.count(), 3); // three ones
     for (auto i = 6; i < s.size(); i++) {
         ASSERT_FALSE(s[i]) << "i: " << i << ", s: " << s;
     }
