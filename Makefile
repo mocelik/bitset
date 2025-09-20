@@ -17,7 +17,7 @@ test: ${TEST_APP}
 CFLAGS  := -I${INCLUDE_DIR} -g -Og -std=c++17 --coverage
 LDFLAGS := -L${LIB_DIR}
 LDLIBS  := -lgtest -lgtest_main
-CXX     := bear --append -- ${CXX}
+CXX     := bear --append --output ${BUILD_DIR}/compile_commands.json -- ${CXX}
 
 ${TEST_APP}: ${TEST_OBJS} | ${BUILD_DIR}
 	${CXX} ${LDFLAGS} ${CFLAGS} -o $@ $^ -I${INCLUDE_DIR} ${LDLIBS}
