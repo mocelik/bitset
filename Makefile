@@ -30,6 +30,7 @@ ${BUILD_DIR} ${BUILD_MIRROR} ${INCLUDE_DIR} ${LIB_DIR}:
 	@mkdir -p $@
 
 coverage: test
+	cat ${BUILD_DIR}/compile_commands.json
 	@gcovr -e '/.*/build/' -e '/.*/test/' --html-nested build/coverage.html
 	@gcovr -e '/.*/build/' -e '/.*/test/' --html-nested build/coverage.html --sonarqube build/coverage.sq
 	@echo "Coverage file is $$(pwd)/build/coverage.html"
