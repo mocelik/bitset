@@ -9,14 +9,14 @@ jobs:
   build:
     name: Build and analyze
     runs-on: ubuntu-latest
-    env:
-      BUILD_WRAPPER_OUT_DIR: build_wrapper_output # Directory where build-wrapper output will be placed
+#    env:
+#      BUILD_WRAPPER_OUT_DIR: build_wrapper_output # Directory where build-wrapper output will be placed
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Install Build Wrapper
-        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v5
+#      - name: Install Build Wrapper
+#        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v5
       - name: Install Other Dependencies
         run: |
           sudo apt-get remove --purge man-db # Disable man pages to speed up installation
@@ -24,11 +24,11 @@ jobs:
           sudo apt-get install -y cmake bear gcovr
       - name: Run Build Wrapper
         run: |
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make coverage
+          make coverage
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            --define sonar.cfamily.compile-commands="${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json"
+            --define sonar.cfamily.compile-commands="build/compile_commands.json"
