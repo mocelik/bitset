@@ -14,9 +14,10 @@ all: test
 test: ${TEST_APP}
 	@${TEST_APP}
 
-CFLAGS  := -I${INCLUDE_DIR} -g -Og -std=c++17
+CFLAGS  := -I${INCLUDE_DIR} -g -Og -std=c++17 --coverage
 LDFLAGS := -L${LIB_DIR}
 LDLIBS  := -lgtest -lgtest_main
+CXX     := bear --append -- ${CXX}
 
 ${TEST_APP}: ${TEST_OBJS} | ${BUILD_DIR}
 	${CXX} ${LDFLAGS} ${CFLAGS} -o $@ $^ -I${INCLUDE_DIR} ${LDLIBS}
@@ -27,6 +28,11 @@ ${TEST_OBJS}: ${BUILD_MIRROR}/%.o : %.cpp | ${BUILD_MIRROR} ${GTEST_TARGET}
 
 ${BUILD_DIR} ${BUILD_MIRROR} ${INCLUDE_DIR} ${LIB_DIR}:
 	@mkdir -p $@
+
+coverage: test
+	@gcovr -e '/.*/build/' -e '/.*/test/' --html-nested build/coverage.html
+	@gcovr -e '/.*/build/' -e '/.*/test/' --html-nested build/coverage.html --sonarqube build/coverage.sq
+	@echo "Coverage file is $$(pwd)/build/coverage.html"
 
 clean:
 	@rm -rf ${BUILD_DIR}
