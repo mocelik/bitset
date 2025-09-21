@@ -1,20 +1,20 @@
 
-BUILD_DIR    := $(shell pwd)/build
+BUILD_DIR    := build
 BUILD_MIRROR := ${BUILD_DIR}/objs
 LIB_DIR      := ${BUILD_DIR}/lib
 INCLUDE_DIR  := ${BUILD_DIR}/include
 GTEST_TARGET := ${INCLUDE_DIR}/gtest
 
 TEST_APP  := ${BUILD_DIR}/gtest_bitset
-TEST_SRCS := test/test.cpp
-TEST_OBJS := ${BUILD_MIRROR}/${TEST_SRCS:.cpp=.o}
+TEST_SRCS := $(wildcard test/*.cpp)
+TEST_OBJS := $(addprefix ${BUILD_MIRROR}/,${TEST_SRCS:.cpp=.o})
 
 .PHONY: test all
 all: test
 test: ${TEST_APP}
 	@${TEST_APP}
 
-CFLAGS  := -I${INCLUDE_DIR} -g -Og -std=c++17 --coverage
+CFLAGS  := -I${INCLUDE_DIR} -g -std=c++17 --coverage
 LDFLAGS := -L${LIB_DIR}
 LDLIBS  := -lgtest -lgtest_main
 CXX     := bear --append --output ${BUILD_DIR}/compile_commands.json -- ${CXX}
@@ -30,7 +30,11 @@ ${BUILD_DIR} ${BUILD_MIRROR} ${INCLUDE_DIR} ${LIB_DIR}:
 	@mkdir -p $@
 
 coverage: test
-	@gcovr -e '/.*/build/' -e '/.*/test/' --html-nested build/coverage.html --sonarqube build/coverage.xml
+	@gcovr -e '/.*/build/' -e '/.*/test/'  \
+			--exclude-unreachable-branches \
+			--exclude-noncode-lines \
+			--exclude-throw-branches \
+			--html-nested build/coverage.html --sonarqube build/coverage.xml
 	@echo "Coverage file is ${BUILD_DIR}/coverage.html"
 
 clean:
