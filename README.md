@@ -1,2 +1,5 @@
 # small-bitset
-A version of the C++ std::bitset with optimizations for small sizes
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mocelik_small-bitset&metric=alert_status&token=e850a0453903c61bb30f7645c1bcb702a7228fdf)](https://sonarcloud.io/summary/new_code?id=mocelik_small-bitset)
+
+An implementation of a [std::bitset](https://en.cppreference.com/w/cpp/utility/bitset.html), except with an additional template parameter specifying the type of the underlying data units to allow small size optimizations.
