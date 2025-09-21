@@ -1,5 +1,5 @@
 
-BUILD_DIR    := build
+BUILD_DIR    := $(shell pwd)/build
 BUILD_MIRROR := ${BUILD_DIR}/objs
 LIB_DIR      := ${BUILD_DIR}/lib
 INCLUDE_DIR  := ${BUILD_DIR}/include
@@ -30,9 +30,8 @@ ${BUILD_DIR} ${BUILD_MIRROR} ${INCLUDE_DIR} ${LIB_DIR}:
 	@mkdir -p $@
 
 coverage: test
-	@gcovr -e '/.*/build/' -e '/.*/test/' --html-nested build/coverage.html
 	@gcovr -e '/.*/build/' -e '/.*/test/' --html-nested build/coverage.html --sonarqube build/coverage.sq
-	@echo "Coverage file is $$(pwd)/build/coverage.html"
+	@echo "Coverage file is ${BUILD_DIR}/coverage.html"
 
 clean:
 	@rm -rf ${BUILD_DIR}
