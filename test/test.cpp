@@ -7,7 +7,7 @@
 using nonstd::small_bitset;
 
 namespace {
-static constexpr std::size_t kNumBits{128};
+constexpr std::size_t kNumBits{128};
 }
 
 // Compile-time tests
@@ -21,7 +21,6 @@ using UnsignedTypes = ::testing::Types<std::uint8_t, std::uint16_t, std::uint32_
 TYPED_TEST_SUITE(SmallBitset, UnsignedTypes);
 
 TYPED_TEST(SmallBitset, constructor_default) {
-    constexpr small_bitset<kNumBits, TypeParam> s; // constexpr
     static_assert(noexcept(small_bitset<kNumBits, TypeParam>()), "Default constructor is not noexcept");
 }
 

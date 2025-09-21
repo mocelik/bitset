@@ -42,7 +42,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     constexpr small_bitset( unsigned long long value ) noexcept {
         reset();
         for (auto i = 0; i < 8 * sizeof value && i < N; i++) {
-            if ((1ull << i) & value) {
+            if ((1ULL << i) & value) {
                 set(i, true);
             }
         }
@@ -195,7 +195,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     constexpr std::size_t count() const noexcept {
         std::size_t cnt{0};
         for (std::size_t i = 0; i < size(); ++i) {
-            if (test(i))
+            if (this->operator[](i))
                 ++cnt;
         }
         return cnt;
@@ -286,10 +286,10 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         }
 
         const auto num_words_to_shift = shift / num_underlying_bits();
-        const auto num_bits_to_shift = shift % num_underlying_bits();
 
         // Handle the words between the most significant and the least significant
-        if (num_bits_to_shift == 0 || num_bits_to_shift == num_underlying_bits()) {
+        if (const auto num_bits_to_shift = shift % num_underlying_bits();
+            num_bits_to_shift == 0 || num_bits_to_shift == num_underlying_bits()) {
             for (auto i = num_words() - 1; i > num_words_to_shift; i--) {
                 m_data[i]  = m_data[(i - num_words_to_shift) - 0];
             }
@@ -319,20 +319,20 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
             return *this;
         }
         const auto num_words_to_shift = shift / num_underlying_bits();
-        const auto num_bits_to_shift = shift % num_underlying_bits();
 
-        if (num_bits_to_shift == 0 || num_bits_to_shift == num_underlying_bits()) {
+        if (const auto num_bits_to_shift = shift % num_underlying_bits();
+            num_bits_to_shift == 0 || num_bits_to_shift == num_underlying_bits()) {
             for (auto i = 0; i < (num_words() - 1) - num_words_to_shift; i++) {
                 m_data[i]  = m_data[(i + num_words_to_shift) + 0];
             }
-            m_data[(num_words() - 1) - num_words_to_shift] = m_data[(num_words() - 1)];
+            m_data[(num_words() - 1) - num_words_to_shift] = m_data[num_words() - 1];
         }
         else {
             for (auto i = 0; i < (num_words() - 1) - num_words_to_shift; i++) {
                 m_data[i]  = m_data[(i + num_words_to_shift) + 0] >> num_bits_to_shift;
                 m_data[i] |= (m_data[(i + num_words_to_shift) + 1] << (num_underlying_bits() - num_bits_to_shift));
             }
-            m_data[(num_words() - 1) - num_words_to_shift] = m_data[(num_words() - 1)] >> num_bits_to_shift;
+            m_data[(num_words() - 1) - num_words_to_shift] = m_data[num_words() - 1] >> num_bits_to_shift;
         }
 
         // zero-fill from the left

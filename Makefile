@@ -38,6 +38,7 @@ coverage: test
 	@echo "Coverage file is ${BUILD_DIR}/coverage.html"
 
 sonarqube: coverage build/dummy_app
+	./build/dummy_app # run once to get coverage
 
 build/dummy_app: main.cpp
 	${CXX} -o $@ $<
