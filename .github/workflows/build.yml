@@ -24,7 +24,7 @@ jobs:
           sudo apt-get install -y cmake bear gcovr
       - name: Run Build Wrapper
         run: |
-          make coverage
+          make sonarqube
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:

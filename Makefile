@@ -37,6 +37,11 @@ coverage: test
 			--html-nested build/coverage.html --sonarqube build/coverage.xml
 	@echo "Coverage file is ${BUILD_DIR}/coverage.html"
 
+sonarqube: coverage build/dummy_app
+
+build/dummy_app: main.cpp
+	${CXX} -o $@ $<
+
 clean:
 	@rm -rf ${BUILD_DIR}
 
