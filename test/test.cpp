@@ -43,6 +43,8 @@ TYPED_TEST(SmallBitset, constructor_unsignedlonglong) {
 
 TYPED_TEST(SmallBitset, constructor_string) {
     std::string data("110010");
+    ASSERT_THROW((small_bitset<kNumBits, TypeParam>(data, data.size() + 1)), std::out_of_range);
+
     small_bitset<kNumBits, TypeParam> s(data); // 110010
     ASSERT_FALSE(s[0]) << s;
     ASSERT_TRUE(s[1]) << s;
@@ -231,6 +233,7 @@ TYPED_TEST(SmallBitset, reset) {
     ASSERT_EQ(s[0], false);
 
     ASSERT_THROW(s.reset(kNumBits), std::out_of_range);
+    ASSERT_THROW(s.reset(kNumBits+1), std::out_of_range);
 }
 
 TYPED_TEST(SmallBitset, flip_all) {
