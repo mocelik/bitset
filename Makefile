@@ -30,7 +30,7 @@ ${BUILD_DIR} ${BUILD_MIRROR} ${INCLUDE_DIR} ${LIB_DIR}:
 	@mkdir -p $@
 
 coverage: test
-	@gcovr -e '/.*/build/' -e '/.*/test/'  \
+	@gcovr  --exclude build/ \
 			--exclude-unreachable-branches \
 			--exclude-noncode-lines \
 			--exclude-throw-branches \
