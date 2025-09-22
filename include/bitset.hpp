@@ -12,9 +12,9 @@
 
 namespace nonstd {
 
-template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset {
+template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     static_assert(std::is_unsigned_v<Underlying>,
-                  "small_bitset requires an unsigned underlying type");
+                  "bitset requires an unsigned underlying type");
 
     using underlying_type_t = Underlying;
     static constexpr std::size_t num_underlying_bits() {
@@ -37,9 +37,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     }
 
     public:
-    constexpr small_bitset() noexcept { reset(); }
+    constexpr bitset() noexcept { reset(); }
 
-    constexpr small_bitset( unsigned long long value ) noexcept {
+    constexpr bitset( unsigned long long value ) noexcept {
         reset();
         for (auto i = 0; i < 8 * sizeof value && i < N; i++) {
             if ((1ULL << i) & value) {
@@ -49,7 +49,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     }
 
     template< class CharT, class Traits, class Alloc >
-    explicit small_bitset( const std::basic_string<CharT, Traits, Alloc>& str,
+    explicit bitset( const std::basic_string<CharT, Traits, Alloc>& str,
                             typename std::basic_string<CharT, Traits, Alloc>::size_type pos = 0,
                             typename std::basic_string<CharT, Traits, Alloc>::size_type n = std::basic_string<CharT, Traits, Alloc>::npos,
                             CharT zero = CharT('0'),
@@ -76,7 +76,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     }
 
     template< class CharT >
-    constexpr explicit small_bitset( const CharT* str, std::size_t n = std::size_t(-1),
+    constexpr explicit bitset( const CharT* str, std::size_t n = std::size_t(-1),
                  CharT zero = CharT('0'), CharT one = CharT('1') ) {
         const auto len = std::char_traits<CharT>::length(str);
         const auto end = str + len;
@@ -113,11 +113,11 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         }
 
         constexpr operator bool() const noexcept {
-            const small_bitset& parent = m_parent;
+            const bitset& parent = m_parent;
             return parent[m_pos];
         }
         constexpr bool operator~() const noexcept {
-            const small_bitset& parent = m_parent;
+            const bitset& parent = m_parent;
             return !parent[m_pos];
         }
 
@@ -127,11 +127,11 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         }
 
     private:
-        friend small_bitset;
-        constexpr reference(small_bitset& parent, std::size_t pos) noexcept
+        friend bitset;
+        constexpr reference(bitset& parent, std::size_t pos) noexcept
             : m_parent(parent), m_pos(pos) {}
 
-        small_bitset& m_parent;
+        bitset& m_parent;
         std::size_t m_pos;
     };
 
@@ -143,7 +143,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return reference(*this, i);
     }
 
-    constexpr small_bitset& set() noexcept {
+    constexpr bitset& set() noexcept {
         for (auto i = 0; i < num_words(); i++) {
             m_data[i] = 0;
             m_data[i] = ~m_data[i];
@@ -154,7 +154,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return *this;
     }
 
-    constexpr small_bitset &set(std::size_t pos, bool value = true) {
+    constexpr bitset &set(std::size_t pos, bool value = true) {
         if (pos >= N) {
             throw std::out_of_range("bitset::set: pos out of range.");
         }
@@ -166,7 +166,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return *this;
     }
 
-    constexpr small_bitset &flip() noexcept {
+    constexpr bitset &flip() noexcept {
         for (auto i = 0; i < num_words(); i++) {
             m_data[i] = ~m_data[i];
         }
@@ -176,7 +176,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return *this;
     }
 
-    constexpr small_bitset &flip(std::size_t pos) {
+    constexpr bitset &flip(std::size_t pos) {
         if (pos >= size()) {
             throw std::out_of_range("bitset::flip: __position (which is " + std::to_string(pos) + " >= _Nb (which is " + std::to_string(N) + ")" );
         }
@@ -232,14 +232,14 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return m_data[num_words() - 1] == 0;
     }
 
-    constexpr small_bitset &reset() noexcept {
+    constexpr bitset &reset() noexcept {
         for (auto i = 0; i < num_words(); i++) {
             m_data[i] = 0;
         }
         return *this;
     }
 
-    constexpr small_bitset &reset(std::size_t pos) {
+    constexpr bitset &reset(std::size_t pos) {
         if (pos >= N) {
             throw std::out_of_range("bitset::reset: pos out of range");
         }
@@ -247,40 +247,40 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
     }
 
 
-    constexpr small_bitset& operator&=( const small_bitset& other ) noexcept {
+    constexpr bitset& operator&=( const bitset& other ) noexcept {
         for (auto i=0; i < num_words(); i++) {
             m_data[i] &= other.m_data[i];
         }
         return *this;
     }
 
-    constexpr small_bitset& operator|=( const small_bitset& other ) noexcept {
+    constexpr bitset& operator|=( const bitset& other ) noexcept {
         for (auto i=0; i < num_words(); i++) {
             m_data[i] |= other.m_data[i];
         }
         return *this;
     }
 
-    constexpr small_bitset& operator^=( const small_bitset& other ) noexcept{
+    constexpr bitset& operator^=( const bitset& other ) noexcept{
         for (auto i=0; i < num_words(); i++) {
             m_data[i] ^= other.m_data[i];
         }
         return *this;
     }
 
-    constexpr small_bitset operator~() const noexcept {
-        small_bitset other;
+    constexpr bitset operator~() const noexcept {
+        bitset other;
         for (auto i = 0; i < num_words(); i++) {
             other.m_data[i] = ~m_data[i];
         }
         return other;
     }
 
-    constexpr small_bitset operator<<( std::size_t shift ) const noexcept {
-        return small_bitset(*this) <<= shift;
+    constexpr bitset operator<<( std::size_t shift ) const noexcept {
+        return bitset(*this) <<= shift;
     }
 
-    constexpr small_bitset& operator<<=( std::size_t shift ) noexcept {
+    constexpr bitset& operator<<=( std::size_t shift ) noexcept {
         if (shift == 0) {
             return *this;
         }
@@ -310,11 +310,11 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return *this;
     }
 
-    constexpr small_bitset operator>>( std::size_t shift ) const noexcept {
-        return small_bitset(*this) >>= shift;
+    constexpr bitset operator>>( std::size_t shift ) const noexcept {
+        return bitset(*this) >>= shift;
     }
 
-    constexpr small_bitset& operator>>=( std::size_t shift ) noexcept {
+    constexpr bitset& operator>>=( std::size_t shift ) noexcept {
         if (shift == 0) {
             return *this;
         }
@@ -398,7 +398,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return value;
     }
 
-    constexpr bool operator==( const small_bitset& rhs) const noexcept {
+    constexpr bool operator==( const bitset& rhs) const noexcept {
         for (auto i = 0; i < num_words(); i++) {
             if (m_data[i] != rhs.m_data[i]) {
                 return false;
@@ -412,29 +412,29 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         }
     }
 
-    constexpr bool operator!=(const small_bitset& rhs) const noexcept {return !(*this == rhs);}
+    constexpr bool operator!=(const bitset& rhs) const noexcept {return !(*this == rhs);}
 
-    friend constexpr small_bitset operator&( const small_bitset& lhs,
-                          const small_bitset& rhs ) noexcept {
-        small_bitset value;
+    friend constexpr bitset operator&( const bitset& lhs,
+                          const bitset& rhs ) noexcept {
+        bitset value;
         for (auto i = 0; i < num_words(); i++) {
             value.m_data[i] = lhs.m_data[i] & rhs.m_data[i];
         }
         return value;
     }
 
-    friend constexpr small_bitset operator|( const small_bitset& lhs,
-                          const small_bitset& rhs ) noexcept {
-        small_bitset value;
+    friend constexpr bitset operator|( const bitset& lhs,
+                          const bitset& rhs ) noexcept {
+        bitset value;
         for (auto i = 0; i < num_words(); i++) {
             value.m_data[i] = lhs.m_data[i] | rhs.m_data[i];
         }
         return value;
     }
 
-    friend constexpr small_bitset operator^( const small_bitset& lhs,
-                          const small_bitset& rhs ) noexcept {
-        small_bitset value;
+    friend constexpr bitset operator^( const bitset& lhs,
+                          const bitset& rhs ) noexcept {
+        bitset value;
         for (auto i = 0; i < num_words(); i++) {
             value.m_data[i] = lhs.m_data[i] ^ rhs.m_data[i];
         }
@@ -443,13 +443,13 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
 
 
     template< class CharT, class Traits>
-    friend std::basic_ostream<CharT, Traits>& operator<<( std::basic_ostream<CharT, Traits>& os, const small_bitset& bits) {
+    friend std::basic_ostream<CharT, Traits>& operator<<( std::basic_ostream<CharT, Traits>& os, const bitset& bits) {
         return os << bits.to_string(std::use_facet<std::ctype<CharT>>(os.getloc()).widen('0'),
                                     std::use_facet<std::ctype<CharT>>(os.getloc()).widen('1'));
     }
 
     template< class CharT, class Traits>
-    friend std::basic_istream<CharT, Traits>& operator>>( std::basic_istream<CharT, Traits>& is, small_bitset& bits ) {
+    friend std::basic_istream<CharT, Traits>& operator>>( std::basic_istream<CharT, Traits>& is, bitset& bits ) {
         int i{N - 1};
         while (i >= 0) {
             CharT input;
@@ -474,7 +474,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
         return is;
     }
 
-    friend struct std::hash<small_bitset>;
+    friend struct std::hash<bitset>;
 };
 
 } // namespace nonstd
@@ -482,9 +482,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class small_bitset 
 namespace std {
 
 template<size_t N, typename Underlying>
-struct hash<nonstd::small_bitset<N, Underlying>>
+struct hash<nonstd::bitset<N, Underlying>>
 {
-    constexpr size_t operator()(const nonstd::small_bitset<N, Underlying>& s) const noexcept
+    constexpr size_t operator()(const nonstd::bitset<N, Underlying>& s) const noexcept
     {
         if constexpr (N < (8 * sizeof(unsigned long long))) {
             return hash<unsigned long long>()(s.to_ullong());

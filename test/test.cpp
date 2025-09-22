@@ -1,34 +1,34 @@
-#include "../small_bitset.hpp"
+#include <bitset.hpp>
 #include <algorithm>
 #include <gtest/gtest.h>
 #include <stdexcept>
 #include <sstream>
 
-using nonstd::small_bitset;
+using nonstd::bitset;
 
 namespace {
 constexpr std::size_t kNumBits{128};
 }
 
 // Compile-time tests
-static_assert(sizeof(small_bitset<1, std::uint16_t>) > sizeof(small_bitset<1, std::uint8_t>),
+static_assert(sizeof(bitset<1, std::uint16_t>) > sizeof(bitset<1, std::uint8_t>),
               "Smaller Underlying type did not result in smaller object");
 
 template <class T>
-class SmallBitset : public testing::Test {};
+class Bitset : public testing::Test {};
 
 using UnsignedTypes = ::testing::Types<std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t>;
-TYPED_TEST_SUITE(SmallBitset, UnsignedTypes);
+TYPED_TEST_SUITE(Bitset, UnsignedTypes);
 
-TYPED_TEST(SmallBitset, constructor_default) {
-    static_assert(noexcept(small_bitset<kNumBits, TypeParam>()), "Default constructor is not noexcept");
+TYPED_TEST(Bitset, constructor_default) {
+    static_assert(noexcept(bitset<kNumBits, TypeParam>()), "Default constructor is not noexcept");
 }
 
-TYPED_TEST(SmallBitset, constructor_unsignedlonglong) {
-    constexpr small_bitset<kNumBits, TypeParam> s_1(1);
+TYPED_TEST(Bitset, constructor_unsignedlonglong) {
+    constexpr bitset<kNumBits, TypeParam> s_1(1);
     ASSERT_TRUE(s_1[0]);
 
-    constexpr small_bitset<kNumBits, TypeParam> s_all(~0ull);
+    constexpr bitset<kNumBits, TypeParam> s_all(~0ull);
     for (auto i = 0; i < 8 * sizeof(unsigned long long); i++) {
         ASSERT_TRUE(s_all[i]);
     }
@@ -36,15 +36,15 @@ TYPED_TEST(SmallBitset, constructor_unsignedlonglong) {
         ASSERT_FALSE(s_all[i]);
     }
 
-    constexpr small_bitset<1, TypeParam> s_overflow(~0ull);
+    constexpr bitset<1, TypeParam> s_overflow(~0ull);
     ASSERT_TRUE(s_overflow[0]);
 }
 
-TYPED_TEST(SmallBitset, constructor_string) {
+TYPED_TEST(Bitset, constructor_string) {
     std::string data("110010");
-    ASSERT_THROW((small_bitset<kNumBits, TypeParam>(data, data.size() + 1)), std::out_of_range);
+    ASSERT_THROW((bitset<kNumBits, TypeParam>(data, data.size() + 1)), std::out_of_range);
 
-    small_bitset<kNumBits, TypeParam> s(data); // 110010
+    bitset<kNumBits, TypeParam> s(data); // 110010
     ASSERT_FALSE(s[0]) << s;
     ASSERT_TRUE(s[1]) << s;
     ASSERT_FALSE(s[2]) << s;
@@ -56,7 +56,7 @@ TYPED_TEST(SmallBitset, constructor_string) {
         ASSERT_FALSE(s[i]) << "i: " << i << ", s: " << s;
     }
 
-    small_bitset<kNumBits, TypeParam> s_offset(data, 2); // 0010
+    bitset<kNumBits, TypeParam> s_offset(data, 2); // 0010
     ASSERT_FALSE(s_offset[0]) << s_offset;
     ASSERT_TRUE(s_offset[1]) << s_offset;
     ASSERT_FALSE(s_offset[2]) << s_offset;
@@ -65,20 +65,20 @@ TYPED_TEST(SmallBitset, constructor_string) {
         ASSERT_FALSE(s_offset[i]) << "i: " << i << ", s: " << s_offset;
     }
 
-    small_bitset<kNumBits, TypeParam> s_offset_size(data, 2, 3); // 001
+    bitset<kNumBits, TypeParam> s_offset_size(data, 2, 3); // 001
     ASSERT_TRUE(s_offset_size[0]);
     for (auto i = 1; i < s_offset_size.size(); i++) {
         ASSERT_FALSE(s_offset_size[i]) << "i: " << i << ", s: " << s_offset_size;
     }
 
-    ASSERT_THROW((small_bitset<kNumBits, TypeParam>(std::string("01X10"))), std::invalid_argument);
+    ASSERT_THROW((bitset<kNumBits, TypeParam>(std::string("01X10"))), std::invalid_argument);
 
     // There should not be an exception thrown if the invalid value is out of range
-    ASSERT_NO_THROW((small_bitset<kNumBits, TypeParam>(std::string("01X10"), 0, 2)));
+    ASSERT_NO_THROW((bitset<kNumBits, TypeParam>(std::string("01X10"), 0, 2)));
 }
 
-TYPED_TEST(SmallBitset, constructor_charptr) {
-    constexpr small_bitset<kNumBits, TypeParam> s("110010"); // 110010
+TYPED_TEST(Bitset, constructor_charptr) {
+    constexpr bitset<kNumBits, TypeParam> s("110010"); // 110010
     ASSERT_FALSE(s[0]) << s;
     ASSERT_TRUE(s[1]) << s;
     ASSERT_FALSE(s[2]) << s;
@@ -89,7 +89,7 @@ TYPED_TEST(SmallBitset, constructor_charptr) {
         ASSERT_FALSE(s[i]) << "i: " << i << ", s: " << s;
     }
 
-    constexpr small_bitset<kNumBits, TypeParam> s_offset("110010", 4); // 0010
+    constexpr bitset<kNumBits, TypeParam> s_offset("110010", 4); // 0010
     ASSERT_FALSE(s_offset[0]) << s_offset;
     ASSERT_TRUE(s_offset[1]) << s_offset;
     ASSERT_FALSE(s_offset[2]) << s_offset;
@@ -98,13 +98,13 @@ TYPED_TEST(SmallBitset, constructor_charptr) {
         ASSERT_FALSE(s_offset[i]) << "i: " << i << ", s: " << s_offset;
     }
 
-    constexpr small_bitset<kNumBits, TypeParam> s_offset_size("11001", 3); // 001
+    constexpr bitset<kNumBits, TypeParam> s_offset_size("11001", 3); // 001
     ASSERT_TRUE(s_offset_size[0]);
     for (auto i = 1; i < s_offset_size.size(); i++) {
         ASSERT_FALSE(s_offset_size[i]) << "i: " << i << ", s: " << s_offset_size;
     }
 
-    constexpr small_bitset<kNumBits, TypeParam> s_alt_char("XXOOXO", 6, 'O', 'X'); // 110010
+    constexpr bitset<kNumBits, TypeParam> s_alt_char("XXOOXO", 6, 'O', 'X'); // 110010
     ASSERT_FALSE(s[0]) << s;
     ASSERT_TRUE(s[1]) << s;
     ASSERT_FALSE(s[2]) << s;
@@ -115,21 +115,21 @@ TYPED_TEST(SmallBitset, constructor_charptr) {
         ASSERT_FALSE(s_offset_size[i]) << "i: " << i << ", s: " << s_offset_size;
     }
 
-    ASSERT_THROW((small_bitset<kNumBits, TypeParam>("01X10")), std::invalid_argument);
+    ASSERT_THROW((bitset<kNumBits, TypeParam>("01X10")), std::invalid_argument);
 
     // There should not be an exception thrown if the invalid value is out of range
-    ASSERT_NO_THROW((small_bitset<kNumBits, TypeParam>("01X10", 2)));
+    ASSERT_NO_THROW((bitset<kNumBits, TypeParam>("01X10", 2)));
 }
 
-TYPED_TEST(SmallBitset, bracket_operator) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, bracket_operator) {
+    bitset<kNumBits, TypeParam> s;
     for (std::size_t i = 0; i < s.size(); i++) {
         ASSERT_FALSE(s[i]) << "i: " << i;
     }
 }
 
-TYPED_TEST(SmallBitset, reference_operator_eq_bool) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, reference_operator_eq_bool) {
+    bitset<kNumBits, TypeParam> s;
     s[0] = true;
     ASSERT_TRUE(s[0]);
     s[0] = false;
@@ -153,8 +153,8 @@ TYPED_TEST(SmallBitset, reference_operator_eq_bool) {
     ASSERT_EQ(s.count(), 0);
 }
 
-TYPED_TEST(SmallBitset, reference_operator_eq_reference) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, reference_operator_eq_reference) {
+    bitset<kNumBits, TypeParam> s;
     s[0] = true;
 
     ASSERT_TRUE(s[0]);
@@ -177,34 +177,34 @@ TYPED_TEST(SmallBitset, reference_operator_eq_reference) {
     ASSERT_EQ(s.count(), 1);
 }
 
-TYPED_TEST(SmallBitset, reference_operator_not) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, reference_operator_not) {
+    bitset<kNumBits, TypeParam> s;
     ASSERT_TRUE(~s[0]);
 }
 
-TYPED_TEST(SmallBitset, reference_operator_flip) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, reference_operator_flip) {
+    bitset<kNumBits, TypeParam> s;
     ASSERT_TRUE(s[0].flip());
     ASSERT_FALSE(s[0].flip());
 }
 
 
-TYPED_TEST(SmallBitset, initialize_to_false) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, initialize_to_false) {
+    bitset<kNumBits, TypeParam> s;
     for (std::size_t i = 0; i < s.size(); i++) {
         ASSERT_FALSE(s.test(i)) << "i: " << i;
     }
 }
 
-TYPED_TEST(SmallBitset, set) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, set) {
+    bitset<kNumBits, TypeParam> s;
     s.set();
     ASSERT_EQ(s.count(), kNumBits);
     ASSERT_TRUE(s.all());
 }
 
-TYPED_TEST(SmallBitset, set_pos) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, set_pos) {
+    bitset<kNumBits, TypeParam> s;
     for (int i = 0; i < s.size(); i++) {
         s.set(i, true);
         ASSERT_TRUE(s[i]) << "i: " << i;
@@ -220,8 +220,8 @@ TYPED_TEST(SmallBitset, set_pos) {
     ASSERT_THROW(s.set(kNumBits, true), std::out_of_range);
 }
 
-TYPED_TEST(SmallBitset, reset) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, reset) {
+    bitset<kNumBits, TypeParam> s;
     s.set();
     ASSERT_EQ(s.count(), kNumBits);
     s.reset();
@@ -235,8 +235,8 @@ TYPED_TEST(SmallBitset, reset) {
     ASSERT_THROW(s.reset(kNumBits+1), std::out_of_range);
 }
 
-TYPED_TEST(SmallBitset, flip_all) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, flip_all) {
+    bitset<kNumBits, TypeParam> s;
 
     ASSERT_TRUE(s.none());
     s.flip();
@@ -271,8 +271,8 @@ TYPED_TEST(SmallBitset, flip_all) {
     }
 }
 
-TYPED_TEST(SmallBitset, flip_index) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, flip_index) {
+    bitset<kNumBits, TypeParam> s;
 
     for (int i = 0; i < s.size(); i++) {
         s.set(i, true);
@@ -290,8 +290,8 @@ TYPED_TEST(SmallBitset, flip_index) {
     ASSERT_THROW(s.flip(s.size()), std::out_of_range);
 }
 
-TYPED_TEST(SmallBitset, test) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, test) {
+    bitset<kNumBits, TypeParam> s;
     for (int i = 0; i < s.size(); i++) {
         s.set(i, true);
         ASSERT_TRUE(s.test(i)) << "i: " << i;
@@ -302,8 +302,8 @@ TYPED_TEST(SmallBitset, test) {
     ASSERT_THROW(s.test(kNumBits), std::out_of_range);
 }
 
-TYPED_TEST(SmallBitset, count) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, count) {
+    bitset<kNumBits, TypeParam> s;
     ASSERT_EQ(s.count(), 0);
     for (std::size_t i = 0; i < s.size(); i++) {
         s.set(i, true);
@@ -311,25 +311,25 @@ TYPED_TEST(SmallBitset, count) {
     }
 }
 
-TYPED_TEST(SmallBitset, size) {
-    small_bitset<1, TypeParam> s_1;
+TYPED_TEST(Bitset, size) {
+    bitset<1, TypeParam> s_1;
     static_assert(s_1.size() == 1);
 
-    small_bitset<8, TypeParam> s_8;
+    bitset<8, TypeParam> s_8;
     static_assert(s_8.size() == 8);
 
-    small_bitset<9, TypeParam> s_9;
+    bitset<9, TypeParam> s_9;
     static_assert(s_9.size() == 9);
 
-    small_bitset<64, TypeParam> s_64;
+    bitset<64, TypeParam> s_64;
     static_assert(s_64.size() == 64);
 
-    small_bitset<129, TypeParam> s_129;
+    bitset<129, TypeParam> s_129;
     static_assert(s_129.size() == 129);
 }
 
-TYPED_TEST(SmallBitset, all) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, all) {
+    bitset<kNumBits, TypeParam> s;
     for (auto i = 0; i < s.size() - 1; ++i) {
         s.set(i, true);
         ASSERT_FALSE(s.all());
@@ -338,8 +338,8 @@ TYPED_TEST(SmallBitset, all) {
     ASSERT_TRUE(s.all());
 }
 
-TYPED_TEST(SmallBitset, any) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, any) {
+    bitset<kNumBits, TypeParam> s;
     for (int i = 0; i < s.size(); i++) {
         s.set(i, true);
         ASSERT_TRUE(s.any()) << "i: " << i;
@@ -348,8 +348,8 @@ TYPED_TEST(SmallBitset, any) {
     }
 }
 
-TYPED_TEST(SmallBitset, none) {
-    small_bitset<kNumBits, TypeParam> s;
+TYPED_TEST(Bitset, none) {
+    bitset<kNumBits, TypeParam> s;
     for (int i = 0; i < s.size(); i++) {
         s.set(i, true);
         ASSERT_FALSE(s.none()) << "i: " << i;
@@ -358,9 +358,9 @@ TYPED_TEST(SmallBitset, none) {
     }
 }
 
-TYPED_TEST(SmallBitset, bitwise_and) {
-    small_bitset<kNumBits, TypeParam> s1;
-    small_bitset<kNumBits, TypeParam> s2;
+TYPED_TEST(Bitset, bitwise_and) {
+    bitset<kNumBits, TypeParam> s1;
+    bitset<kNumBits, TypeParam> s2;
 
     s1.set(0);
     s2.set(0);
@@ -371,9 +371,9 @@ TYPED_TEST(SmallBitset, bitwise_and) {
     ASSERT_FALSE(s1[1]);
 }
 
-TYPED_TEST(SmallBitset, bitwise_or) {
-    small_bitset<kNumBits, TypeParam> s1;
-    small_bitset<kNumBits, TypeParam> s2;
+TYPED_TEST(Bitset, bitwise_or) {
+    bitset<kNumBits, TypeParam> s1;
+    bitset<kNumBits, TypeParam> s2;
 
     s1.set(0);
     s2.set(1);
@@ -384,9 +384,9 @@ TYPED_TEST(SmallBitset, bitwise_or) {
     ASSERT_FALSE(s1[2]);
 }
 
-TYPED_TEST(SmallBitset, bitwise_xor) {
-    small_bitset<kNumBits, TypeParam> s1;
-    small_bitset<kNumBits, TypeParam> s2;
+TYPED_TEST(Bitset, bitwise_xor) {
+    bitset<kNumBits, TypeParam> s1;
+    bitset<kNumBits, TypeParam> s2;
 
     s1.set(0);
     s2.set(1);
@@ -400,8 +400,8 @@ TYPED_TEST(SmallBitset, bitwise_xor) {
     ASSERT_FALSE(s1[3]);
 }
 
-TYPED_TEST(SmallBitset, bitwise_not) {
-    small_bitset<kNumBits, TypeParam> s1;
+TYPED_TEST(Bitset, bitwise_not) {
+    bitset<kNumBits, TypeParam> s1;
 
     s1.set(0);
     s1.set(2);
@@ -420,9 +420,9 @@ TYPED_TEST(SmallBitset, bitwise_not) {
     ASSERT_TRUE(inverse[3]);
 }
 
-TYPED_TEST(SmallBitset, bitshift_left_first_bit) {
+TYPED_TEST(Bitset, bitshift_left_first_bit) {
     for (auto i = 0; i < kNumBits; i++) {
-        small_bitset<kNumBits, TypeParam> s;
+        bitset<kNumBits, TypeParam> s;
         s.set(0);
         s = s << i;
         ASSERT_TRUE(s[i]) << "i = " << i << ", bitset: " << s;
@@ -430,24 +430,24 @@ TYPED_TEST(SmallBitset, bitshift_left_first_bit) {
     }
 }
 
-TYPED_TEST(SmallBitset, bitshift_left_nth_bit) {
+TYPED_TEST(Bitset, bitshift_left_nth_bit) {
     for (auto i = 0; i < kNumBits - 1; i++) {
-        small_bitset<kNumBits, TypeParam> s;
+        bitset<kNumBits, TypeParam> s;
         s.set(i);
         s = s << 1;
         ASSERT_TRUE(s[i+1]) << "i = " << i << ", bitset: " << s;
         ASSERT_EQ(s.count(), 1) << "i = " << i << ", bitset: " << s;
     }
 
-    small_bitset<kNumBits, TypeParam> s;
+    bitset<kNumBits, TypeParam> s;
     s.set(kNumBits - 1);
     s = s << 1;
     ASSERT_TRUE(s.none());
 }
 
-TYPED_TEST(SmallBitset, bitshift_left_multiple_bits) {
+TYPED_TEST(Bitset, bitshift_left_multiple_bits) {
     for (auto i = 0; i < 8; i++) {
-        small_bitset<kNumBits, TypeParam> s;
+        bitset<kNumBits, TypeParam> s;
         constexpr auto kNumUnderlying = kNumBits/(8*sizeof(uint8_t));
 
         // Set the i'th bit in each word
@@ -474,9 +474,9 @@ TYPED_TEST(SmallBitset, bitshift_left_multiple_bits) {
 }
 
 
-TYPED_TEST(SmallBitset, bitshift_left_first_bit_assignment) {
+TYPED_TEST(Bitset, bitshift_left_first_bit_assignment) {
     for (auto i = 0; i < kNumBits; i++) {
-        small_bitset<kNumBits, TypeParam> s;
+        bitset<kNumBits, TypeParam> s;
         s.set(0);
         s <<= i;
         ASSERT_TRUE(s[i]) << "i = " << i << ", bitset: " << s;
@@ -484,24 +484,24 @@ TYPED_TEST(SmallBitset, bitshift_left_first_bit_assignment) {
     }
 }
 
-TYPED_TEST(SmallBitset, bitshift_left_nth_bit_assignment) {
+TYPED_TEST(Bitset, bitshift_left_nth_bit_assignment) {
     for (auto i = 0; i < kNumBits - 1; i++) {
-        small_bitset<kNumBits, TypeParam> s;
+        bitset<kNumBits, TypeParam> s;
         s.set(i);
         s <<= 1;
         ASSERT_TRUE(s[i+1]) << "i = " << i << ", bitset: " << s;
         ASSERT_EQ(s.count(), 1) << "i = " << i << ", bitset: " << s;
     }
 
-    small_bitset<kNumBits, TypeParam> s;
+    bitset<kNumBits, TypeParam> s;
     s.set(kNumBits - 1);
     s <<= 1;
     ASSERT_TRUE(s.none());
 }
 
-TYPED_TEST(SmallBitset, bitshift_left_multiple_bits_assignment) {
+TYPED_TEST(Bitset, bitshift_left_multiple_bits_assignment) {
     for (auto i = 0; i < 8; i++) {
-        small_bitset<kNumBits, TypeParam> s;
+        bitset<kNumBits, TypeParam> s;
         constexpr auto kNumUnderlying = kNumBits/(8*sizeof(uint8_t));
 
         // Set the i'th bit in each word
@@ -527,9 +527,9 @@ TYPED_TEST(SmallBitset, bitshift_left_multiple_bits_assignment) {
     }
 }
 
-TYPED_TEST(SmallBitset, bitshift_right_last_bit) {
+TYPED_TEST(Bitset, bitshift_right_last_bit) {
     for (auto i = 0; i < kNumBits; i++) {
-        small_bitset<kNumBits, TypeParam> s;
+        bitset<kNumBits, TypeParam> s;
         s.set(kNumBits - 1);
         s = s >> i;
         ASSERT_TRUE(s[(kNumBits - 1) - i]) << "i = " << i << ", bitset: " << s;
@@ -537,24 +537,24 @@ TYPED_TEST(SmallBitset, bitshift_right_last_bit) {
     }
 }
 
-TYPED_TEST(SmallBitset, bitshift_right_nth_bit) {
+TYPED_TEST(Bitset, bitshift_right_nth_bit) {
     for (auto i = 1; i < kNumBits; i++) {
-        small_bitset<kNumBits, TypeParam> s;
+        bitset<kNumBits, TypeParam> s;
         s.set(i);
         s = s >> 1;
         ASSERT_TRUE(s[i-1]) << "i = " << i << ", bitset: " << s;
         ASSERT_EQ(s.count(), 1) << "i = " << i << ", bitset: " << s;
     }
 
-    small_bitset<kNumBits, TypeParam> s;
+    bitset<kNumBits, TypeParam> s;
     s.set(0);
     s = s >> 1;
     ASSERT_TRUE(s.none());
 }
 
-TYPED_TEST(SmallBitset, bitshift_right_multiple_bits) {
+TYPED_TEST(Bitset, bitshift_right_multiple_bits) {
     for (auto i = 0; i < 8; i++) {
-        small_bitset<kNumBits, TypeParam> s;
+        bitset<kNumBits, TypeParam> s;
         constexpr auto kNumUnderlying = kNumBits/(8*sizeof(uint8_t));
 
         // Set the i'th bit in each word
@@ -580,9 +580,9 @@ TYPED_TEST(SmallBitset, bitshift_right_multiple_bits) {
     }
 }
 
-TYPED_TEST(SmallBitset, bitshift_right_first_bit_assignment) {
+TYPED_TEST(Bitset, bitshift_right_first_bit_assignment) {
     for (auto i = 0; i < kNumBits; i++) {
-        small_bitset<kNumBits, TypeParam> s;
+        bitset<kNumBits, TypeParam> s;
         s.set(kNumBits - 1);
         s >>= i;
         ASSERT_TRUE(s[(kNumBits - 1) - i]) << "i = " << i << ", bitset: " << s;
@@ -590,24 +590,24 @@ TYPED_TEST(SmallBitset, bitshift_right_first_bit_assignment) {
     }
 }
 
-TYPED_TEST(SmallBitset, bitshift_right_nth_bit_assignment) {
+TYPED_TEST(Bitset, bitshift_right_nth_bit_assignment) {
     for (auto i = 1; i < kNumBits; i++) {
-        small_bitset<kNumBits, TypeParam> s;
+        bitset<kNumBits, TypeParam> s;
         s.set(i);
         s >>= 1;
         ASSERT_TRUE(s[i-1]) << "i = " << i << ", bitset: " << s;
         ASSERT_EQ(s.count(), 1) << "i = " << i << ", bitset: " << s;
     }
 
-    small_bitset<kNumBits, TypeParam> s;
+    bitset<kNumBits, TypeParam> s;
     s.set(0);
     s >>= 1;
     ASSERT_TRUE(s.none());
 }
 
-TYPED_TEST(SmallBitset, bitshift_right_multiple_bits_assignment) {
+TYPED_TEST(Bitset, bitshift_right_multiple_bits_assignment) {
     for (auto i = 0; i < 8; i++) {
-        small_bitset<kNumBits, TypeParam> s;
+        bitset<kNumBits, TypeParam> s;
         constexpr auto kNumUnderlying = kNumBits/(8*sizeof(uint8_t));
 
         // Set the i'th bit in each word
@@ -633,47 +633,47 @@ TYPED_TEST(SmallBitset, bitshift_right_multiple_bits_assignment) {
     }
 }
 
-TYPED_TEST(SmallBitset, operator_equals_1) {
-    small_bitset<1, TypeParam> s1(1);
-    small_bitset<1, TypeParam> s2(1);
-    small_bitset<1, TypeParam> s3(0);
+TYPED_TEST(Bitset, operator_equals_1) {
+    bitset<1, TypeParam> s1(1);
+    bitset<1, TypeParam> s2(1);
+    bitset<1, TypeParam> s3(0);
     ASSERT_EQ(s1, s2);
     ASSERT_NE(s1, s3);
 }
 
-TYPED_TEST(SmallBitset, operator_equals_16) {
-    small_bitset<16, TypeParam> s1(1 << 8 | 1);
-    small_bitset<16, TypeParam> s2(1 << 8 | 1);
-    small_bitset<16, TypeParam> s3(1);
-    small_bitset<16, TypeParam> s4(1 << 8);
-    ASSERT_EQ(s1, s2);
-    ASSERT_NE(s1, s3);
-    ASSERT_NE(s1, s4);
-    ASSERT_NE(s3, s4);
-}
-
-TYPED_TEST(SmallBitset, operator_equals_9) {
-    small_bitset<9, TypeParam> s1(1 << 8 | 1);
-    small_bitset<9, TypeParam> s2(1 << 8 | 1);
-    small_bitset<9, TypeParam> s3(1);
-    small_bitset<9, TypeParam> s4(1 << 8);
+TYPED_TEST(Bitset, operator_equals_16) {
+    bitset<16, TypeParam> s1(1 << 8 | 1);
+    bitset<16, TypeParam> s2(1 << 8 | 1);
+    bitset<16, TypeParam> s3(1);
+    bitset<16, TypeParam> s4(1 << 8);
     ASSERT_EQ(s1, s2);
     ASSERT_NE(s1, s3);
     ASSERT_NE(s1, s4);
     ASSERT_NE(s3, s4);
 }
 
-TYPED_TEST(SmallBitset, operator_equals_10) {
-    small_bitset<10, TypeParam> s1;
-    small_bitset<10, TypeParam> s2;
+TYPED_TEST(Bitset, operator_equals_9) {
+    bitset<9, TypeParam> s1(1 << 8 | 1);
+    bitset<9, TypeParam> s2(1 << 8 | 1);
+    bitset<9, TypeParam> s3(1);
+    bitset<9, TypeParam> s4(1 << 8);
+    ASSERT_EQ(s1, s2);
+    ASSERT_NE(s1, s3);
+    ASSERT_NE(s1, s4);
+    ASSERT_NE(s3, s4);
+}
+
+TYPED_TEST(Bitset, operator_equals_10) {
+    bitset<10, TypeParam> s1;
+    bitset<10, TypeParam> s2;
     ASSERT_EQ(s1.flip(), s2.set());
 }
 
-TYPED_TEST(SmallBitset, to_string) {
+TYPED_TEST(Bitset, to_string) {
     std::string data("101010101");
     data.insert(0, kNumBits - data.size(), '0');
 
-    small_bitset<kNumBits, TypeParam> s(data);
+    bitset<kNumBits, TypeParam> s(data);
     ASSERT_EQ(data, s.to_string());
 
     std::string modified_data(data);
@@ -682,10 +682,10 @@ TYPED_TEST(SmallBitset, to_string) {
     ASSERT_EQ(modified_data, s.to_string('O','X'));
 }
 
-TYPED_TEST(SmallBitset, to_ulong) {
+TYPED_TEST(Bitset, to_ulong) {
     constexpr auto kNumBitsInUnsignedLong = 8 * sizeof(unsigned long);
     constexpr auto value = 1ul << (kNumBitsInUnsignedLong - 1);
-    small_bitset<kNumBits, TypeParam> s(value);
+    bitset<kNumBits, TypeParam> s(value);
     ASSERT_EQ(s.to_ulong(), value) << s;
 
     s.flip();
@@ -693,10 +693,10 @@ TYPED_TEST(SmallBitset, to_ulong) {
     ASSERT_THROW(s.to_ulong(), std::overflow_error);
 }
 
-TYPED_TEST(SmallBitset, to_ullong) {
+TYPED_TEST(Bitset, to_ullong) {
     constexpr auto kNumBitsInUnsignedLongLong = 8 * sizeof(unsigned long long);
     constexpr auto value = 1ul << (kNumBitsInUnsignedLongLong - 1);
-    small_bitset<kNumBits, TypeParam> s(value);
+    bitset<kNumBits, TypeParam> s(value);
     ASSERT_EQ(s.to_ullong(), value) << s;
 
     s.flip();
@@ -704,75 +704,75 @@ TYPED_TEST(SmallBitset, to_ullong) {
     ASSERT_THROW(s.to_ullong(), std::overflow_error);
 }
 
-TYPED_TEST(SmallBitset, free_operator_bitand) {
-    constexpr small_bitset<kNumBits, TypeParam> zero;
-    constexpr small_bitset<kNumBits, TypeParam> ones{~zero};
+TYPED_TEST(Bitset, free_operator_bitand) {
+    constexpr bitset<kNumBits, TypeParam> zero;
+    constexpr bitset<kNumBits, TypeParam> ones{~zero};
 
     ASSERT_EQ(zero & zero, zero);
     ASSERT_EQ(zero & ones, zero);
     ASSERT_EQ(ones & zero, zero);
     ASSERT_EQ(ones & ones, ones);
 
-    constexpr small_bitset<kNumBits, TypeParam> s1{1 | 1 << 8};
-    constexpr small_bitset<kNumBits, TypeParam> s2{1 | 1 << 8 | 1 << 16};
+    constexpr bitset<kNumBits, TypeParam> s1{1 | 1 << 8};
+    constexpr bitset<kNumBits, TypeParam> s2{1 | 1 << 8 | 1 << 16};
     ASSERT_EQ(s1 & s2, s1);
     ASSERT_EQ(s1 & ones, s1);
     ASSERT_EQ(s1 & zero, zero);
 }
 
 
-TYPED_TEST(SmallBitset, free_operator_bitor) {
-    constexpr small_bitset<kNumBits, TypeParam> zero;
-    constexpr small_bitset<kNumBits, TypeParam> ones{~zero};
+TYPED_TEST(Bitset, free_operator_bitor) {
+    constexpr bitset<kNumBits, TypeParam> zero;
+    constexpr bitset<kNumBits, TypeParam> ones{~zero};
 
     ASSERT_EQ(zero | zero, zero);
     ASSERT_EQ(zero | ones, ones);
     ASSERT_EQ(ones | zero, ones);
     ASSERT_EQ(ones | ones, ones);
 
-    constexpr small_bitset<kNumBits, TypeParam> s1{1 | 1 << 8};
-    constexpr small_bitset<kNumBits, TypeParam> s2{1 | 1 << 8 | 1 << 16};
+    constexpr bitset<kNumBits, TypeParam> s1{1 | 1 << 8};
+    constexpr bitset<kNumBits, TypeParam> s2{1 | 1 << 8 | 1 << 16};
     ASSERT_EQ(s1 | s2, s2);
     ASSERT_EQ(s1 | ones, ones);
     ASSERT_EQ(s1 | zero, s1);
 }
 
-TYPED_TEST(SmallBitset, free_operator_bitxor) {
-    constexpr small_bitset<kNumBits, TypeParam> zero;
-    constexpr small_bitset<kNumBits, TypeParam> ones{~zero};
+TYPED_TEST(Bitset, free_operator_bitxor) {
+    constexpr bitset<kNumBits, TypeParam> zero;
+    constexpr bitset<kNumBits, TypeParam> ones{~zero};
 
     ASSERT_EQ(zero ^ zero, zero);
     ASSERT_EQ(zero ^ ones, ones);
     ASSERT_EQ(ones ^ zero, ones);
     ASSERT_EQ(ones ^ ones, zero);
 
-    constexpr small_bitset<kNumBits, TypeParam> s1{1 | 1 << 8};
-    constexpr small_bitset<kNumBits, TypeParam> s2{ 1 << 8 | 1 << 16};
+    constexpr bitset<kNumBits, TypeParam> s1{1 | 1 << 8};
+    constexpr bitset<kNumBits, TypeParam> s2{ 1 << 8 | 1 << 16};
     ASSERT_EQ(s1 ^ s2, 1 | 1 << 16 );
     ASSERT_EQ(s1 ^ ones, ~s1);
     ASSERT_EQ(s1 ^ zero, s1);
 }
 
-TYPED_TEST(SmallBitset, operator_stream_insert_extract){
+TYPED_TEST(Bitset, operator_stream_insert_extract){
     std::string data("1111000010101010");
     data.insert(0, kNumBits - data.size(), '0');
 
-    small_bitset<kNumBits, TypeParam> bits(data);
+    bitset<kNumBits, TypeParam> bits(data);
 
     std::stringstream ss;
     ss << bits;
     ASSERT_EQ(ss.str(), data);
 
-    small_bitset<kNumBits, TypeParam> bits2;
+    bitset<kNumBits, TypeParam> bits2;
     ss >> bits2;
     ASSERT_EQ(bits, bits2);
 }
 
-TYPED_TEST(SmallBitset, operator_stream_extract_invalid){
+TYPED_TEST(Bitset, operator_stream_extract_invalid){
     std::stringstream ss;
     ss << "10X101"; // The X is invalid
 
-    small_bitset<3, TypeParam> bitset;
+    bitset<3, TypeParam> bitset;
     ss >> bitset; // Read 10X
     ASSERT_TRUE(ss.fail()); // X is invalid
 
@@ -784,11 +784,11 @@ TYPED_TEST(SmallBitset, operator_stream_extract_invalid){
     ASSERT_TRUE(bitset[2]);
 }
 
-TYPED_TEST(SmallBitset, operator_stream_extraction_reset){
+TYPED_TEST(Bitset, operator_stream_extraction_reset){
     std::stringstream ss;
     ss << "101";
 
-    small_bitset<4, TypeParam> bitset(1 << 3);
+    bitset<4, TypeParam> bitset(1 << 3);
     ss >> bitset; // Read 101, zero-extend on left with 0's
 
     ASSERT_TRUE(bitset[0]) << bitset;
@@ -797,15 +797,15 @@ TYPED_TEST(SmallBitset, operator_stream_extraction_reset){
     ASSERT_FALSE(bitset[3]) << bitset;
 }
 
-TYPED_TEST(SmallBitset, hash) {
-    auto big_hash = std::hash<small_bitset<kNumBits, TypeParam>>();
+TYPED_TEST(Bitset, hash) {
+    auto big_hash = std::hash<bitset<kNumBits, TypeParam>>();
 
-    ASSERT_EQ(big_hash(small_bitset<kNumBits, TypeParam>(1)), big_hash(small_bitset<kNumBits, TypeParam>(1)));
-    ASSERT_NE(big_hash(small_bitset<kNumBits, TypeParam>(1)), big_hash(small_bitset<kNumBits, TypeParam>(0)));
-    ASSERT_NE(big_hash(small_bitset<kNumBits, TypeParam>(1)), big_hash(small_bitset<kNumBits, TypeParam>(2)));
+    ASSERT_EQ(big_hash(bitset<kNumBits, TypeParam>(1)), big_hash(bitset<kNumBits, TypeParam>(1)));
+    ASSERT_NE(big_hash(bitset<kNumBits, TypeParam>(1)), big_hash(bitset<kNumBits, TypeParam>(0)));
+    ASSERT_NE(big_hash(bitset<kNumBits, TypeParam>(1)), big_hash(bitset<kNumBits, TypeParam>(2)));
 
-    auto small_hash = std::hash<small_bitset<32, TypeParam>>();
-    ASSERT_EQ(small_hash(small_bitset<32, TypeParam>(1)), small_hash(small_bitset<32, TypeParam>(1)));
-    ASSERT_NE(small_hash(small_bitset<32, TypeParam>(1)), small_hash(small_bitset<32, TypeParam>(0)));
-    ASSERT_NE(small_hash(small_bitset<32, TypeParam>(1)), small_hash(small_bitset<32, TypeParam>(2)));
+    auto small_hash = std::hash<bitset<32, TypeParam>>();
+    ASSERT_EQ(small_hash(bitset<32, TypeParam>(1)), small_hash(bitset<32, TypeParam>(1)));
+    ASSERT_NE(small_hash(bitset<32, TypeParam>(1)), small_hash(bitset<32, TypeParam>(0)));
+    ASSERT_NE(small_hash(bitset<32, TypeParam>(1)), small_hash(bitset<32, TypeParam>(2)));
 }
