@@ -31,9 +31,12 @@ ${BUILD_DIR} ${BUILD_MIRROR} ${INCLUDE_DIRS} ${LIB_DIR}:
 
 coverage: test
 	@gcovr  --exclude build/ \
+			--exclude test/ \
 			--exclude-unreachable-branches \
 			--exclude-noncode-lines \
 			--exclude-throw-branches \
+			--gcov-delete \
+			--print-summary \
 			--html-nested build/coverage.html --sonarqube build/coverage.xml
 	@echo "Coverage file is ${BUILD_DIR}/coverage.html"
 
