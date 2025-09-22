@@ -3,10 +3,10 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring> // memset
+#include <cstring>
 #include <iosfwd>
 #include <iterator>
-#include <stdexcept> // std::out_of_range
+#include <stdexcept>
 #include <type_traits>
 
 namespace nonstd {
@@ -288,6 +288,10 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         if (shift == 0) {
             return *this;
         }
+        if (shift >= N) {
+            reset();
+            return *this;
+        }
 
         const std::size_t num_words_to_shift = shift / num_underlying_bits();
 
@@ -324,6 +328,10 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
 
     constexpr bitset &operator>>=(std::size_t shift) noexcept {
         if (shift == 0) {
+            return *this;
+        }
+        if (shift >= N) {
+            reset();
             return *this;
         }
         const auto num_words_to_shift = shift / num_underlying_bits();

@@ -508,6 +508,27 @@ TYPED_TEST(Bitset, bitshift_left_nth_bit_assignment) {
     ASSERT_TRUE(s.none());
 }
 
+TYPED_TEST(Bitset, bitshift_left_greater_than_size) {
+    bitset<kNumBits, TypeParam> s;
+    s.set(0);
+    s <<= kNumBits;
+    ASSERT_TRUE(s.none());
+
+    s.set(0);
+    s <<= kNumBits + 1;
+}
+
+TYPED_TEST(Bitset, bitshift_right_greater_than_size) {
+    bitset<kNumBits, TypeParam> s;
+    s.set(kNumBits - 1);
+    s >>= kNumBits;
+    ASSERT_TRUE(s.none());
+
+    s.set(kNumBits - 1);
+    s >>= kNumBits + 1;
+    ASSERT_TRUE(s.none());
+}
+
 TYPED_TEST(Bitset, bitshift_left_multiple_bits_assignment) {
     for (auto i = 0; i < 8; i++) {
         bitset<kNumBits, TypeParam> s;
