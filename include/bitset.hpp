@@ -4,11 +4,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring> // memset
+#include <iosfwd>
 #include <iterator>
 #include <stdexcept> // std::out_of_range
 #include <type_traits>
-#include <ostream>
-#include <istream>
 
 namespace nonstd {
 
@@ -30,16 +29,19 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     }
 
     underlying_type_t m_data[num_words()] = {underlying_type_t(0)};
-    static constexpr underlying_type_t m_last_word_mask = (N % num_underlying_bits() != 0) ? (1 << (N % num_underlying_bits())) - 1 : ~0;
+    static constexpr underlying_type_t m_last_word_mask =
+        (N % num_underlying_bits() != 0)
+            ? (1 << (N % num_underlying_bits())) - 1
+            : ~0;
 
     static constexpr underlying_type_t mask(std::size_t pos) noexcept {
         return underlying_type_t{1} << (pos % num_underlying_bits());
     }
 
-    public:
+  public:
     constexpr bitset() noexcept { reset(); }
 
-    constexpr bitset( unsigned long long value ) noexcept {
+    constexpr bitset(unsigned long long value) noexcept {
         reset();
         for (auto i = 0; i < 8 * sizeof value && i < N; i++) {
             if ((1ULL << i) & value) {
@@ -48,18 +50,20 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         }
     }
 
-    template< class CharT, class Traits, class Alloc >
-    explicit bitset( const std::basic_string<CharT, Traits, Alloc>& str,
-                            typename std::basic_string<CharT, Traits, Alloc>::size_type pos = 0,
-                            typename std::basic_string<CharT, Traits, Alloc>::size_type n = std::basic_string<CharT, Traits, Alloc>::npos,
-                            CharT zero = CharT('0'),
-                            CharT one = CharT('1') ) {
+    template <class CharT, class Traits, class Alloc>
+    explicit bitset(
+        const std::basic_string<CharT, Traits, Alloc> &str,
+        typename std::basic_string<CharT, Traits, Alloc>::size_type pos = 0,
+        typename std::basic_string<CharT, Traits, Alloc>::size_type n =
+            std::basic_string<CharT, Traits, Alloc>::npos,
+        CharT zero = CharT('0'), CharT one = CharT('1')) {
         if (pos > str.size()) {
             throw std::out_of_range("pos > str.size()");
         }
 
         auto i = 0;
-        auto reverse_start = std::reverse_iterator(n == str.npos ? str.end() : str.begin() + pos + n);
+        auto reverse_start = std::reverse_iterator(
+            n == str.npos ? str.end() : str.begin() + pos + n);
         auto reverse_end = std::reverse_iterator(str.begin() + pos);
         auto iter = reverse_start;
         while (iter != reverse_end) {
@@ -68,16 +72,18 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
             } else if (Traits::eq(*iter, one)) {
                 set(i, 1);
             } else {
-                throw std::invalid_argument(std::string("Unexpected character ") + *iter + " is neither zero (" + zero + ") or one (" + one + ")");
+                throw std::invalid_argument(
+                    std::string("Unexpected character ") + *iter +
+                    " is neither zero (" + zero + ") or one (" + one + ")");
             }
             ++i;
             ++iter;
         }
     }
 
-    template< class CharT >
-    constexpr explicit bitset( const CharT* str, std::size_t n = std::size_t(-1),
-                 CharT zero = CharT('0'), CharT one = CharT('1') ) {
+    template <class CharT>
+    constexpr explicit bitset(const CharT *str, std::size_t n = std::size_t(-1),
+                              CharT zero = CharT('0'), CharT one = CharT('1')) {
         const auto len = std::char_traits<CharT>::length(str);
         const auto end = str + len;
         if (n == std::basic_string<CharT>::npos || n == std::size_t(-1)) {
@@ -92,7 +98,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
             if (*iter == one) {
                 set(i, 1);
             } else if (*iter != zero) {
-                throw std::invalid_argument(std::string("Unexpected character ") + *iter + " is neither zero (" + zero + ") or one (" + one + ")");
+                throw std::invalid_argument(
+                    std::string("Unexpected character ") + *iter +
+                    " is neither zero (" + zero + ") or one (" + one + ")");
             }
             ++i;
             ++iter;
@@ -100,38 +108,38 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     }
 
     class reference {
-    public:
-        constexpr reference(const reference&) = default;
+      public:
+        constexpr reference(const reference &) = default;
 
-        constexpr reference& operator=(bool value) noexcept {
+        constexpr reference &operator=(bool value) noexcept {
             m_parent.set(m_pos, value);
             return *this;
         }
-        constexpr reference& operator=(const reference& value) noexcept {
+        constexpr reference &operator=(const reference &value) noexcept {
             m_parent.set(m_pos, value);
             return *this;
         }
 
         constexpr operator bool() const noexcept {
-            const bitset& parent = m_parent;
+            const bitset &parent = m_parent;
             return parent[m_pos];
         }
         constexpr bool operator~() const noexcept {
-            const bitset& parent = m_parent;
+            const bitset &parent = m_parent;
             return !parent[m_pos];
         }
 
-        constexpr reference& flip() noexcept {
+        constexpr reference &flip() noexcept {
             m_parent.set(m_pos, !*this);
             return *this;
         }
 
-    private:
+      private:
         friend bitset;
-        constexpr reference(bitset& parent, std::size_t pos) noexcept
+        constexpr reference(bitset &parent, std::size_t pos) noexcept
             : m_parent(parent), m_pos(pos) {}
 
-        bitset& m_parent;
+        bitset &m_parent;
         std::size_t m_pos;
     };
 
@@ -143,7 +151,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         return reference(*this, i);
     }
 
-    constexpr bitset& set() noexcept {
+    constexpr bitset &set() noexcept {
         for (auto i = 0; i < num_words(); i++) {
             m_data[i] = 0;
             m_data[i] = ~m_data[i];
@@ -178,7 +186,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
 
     constexpr bitset &flip(std::size_t pos) {
         if (pos >= size()) {
-            throw std::out_of_range("bitset::flip: __position (which is " + std::to_string(pos) + " >= _Nb (which is " + std::to_string(N) + ")" );
+            throw std::out_of_range("bitset::flip: __position (which is " +
+                                    std::to_string(pos) + " >= _Nb (which is " +
+                                    std::to_string(N) + ")");
         }
 
         set(pos, !this->test(pos));
@@ -239,30 +249,24 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         return *this;
     }
 
-    constexpr bitset &reset(std::size_t pos) {
-        if (pos >= N) {
-            throw std::out_of_range("bitset::reset: pos out of range");
-        }
-        return set(pos, false);
-    }
+    constexpr bitset &reset(std::size_t pos) { return set(pos, false); }
 
-
-    constexpr bitset& operator&=( const bitset& other ) noexcept {
-        for (auto i=0; i < num_words(); i++) {
+    constexpr bitset &operator&=(const bitset &other) noexcept {
+        for (auto i = 0; i < num_words(); i++) {
             m_data[i] &= other.m_data[i];
         }
         return *this;
     }
 
-    constexpr bitset& operator|=( const bitset& other ) noexcept {
-        for (auto i=0; i < num_words(); i++) {
+    constexpr bitset &operator|=(const bitset &other) noexcept {
+        for (auto i = 0; i < num_words(); i++) {
             m_data[i] |= other.m_data[i];
         }
         return *this;
     }
 
-    constexpr bitset& operator^=( const bitset& other ) noexcept{
-        for (auto i=0; i < num_words(); i++) {
+    constexpr bitset &operator^=(const bitset &other) noexcept {
+        for (auto i = 0; i < num_words(); i++) {
             m_data[i] ^= other.m_data[i];
         }
         return *this;
@@ -276,28 +280,32 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         return other;
     }
 
-    constexpr bitset operator<<( std::size_t shift ) const noexcept {
+    constexpr bitset operator<<(std::size_t shift) const noexcept {
         return bitset(*this) <<= shift;
     }
 
-    constexpr bitset& operator<<=( std::size_t shift ) noexcept {
+    constexpr bitset &operator<<=(std::size_t shift) noexcept {
         if (shift == 0) {
             return *this;
         }
 
-        const auto num_words_to_shift = shift / num_underlying_bits();
+        const std::size_t num_words_to_shift = shift / num_underlying_bits();
 
-        // Handle the words between the most significant and the least significant
+        // Handle the words between the most significant and the least
+        // significant
         if (const auto num_bits_to_shift = shift % num_underlying_bits();
-            num_bits_to_shift == 0 || num_bits_to_shift == num_underlying_bits()) {
+            num_bits_to_shift == 0 ||
+            num_bits_to_shift == num_underlying_bits()) {
             for (auto i = num_words() - 1; i > num_words_to_shift; i--) {
-                m_data[i]  = m_data[(i - num_words_to_shift) - 0];
+                m_data[i] = m_data[(i - num_words_to_shift) - 0];
             }
             m_data[num_words_to_shift] = m_data[0];
         } else {
-            for (auto i = num_words() - 1; i > num_words_to_shift; i--) {
-                m_data[i]  = m_data[(i - num_words_to_shift) - 0] << num_bits_to_shift;
-                m_data[i] |= m_data[(i - num_words_to_shift) - 1] >> (num_underlying_bits() - num_bits_to_shift);
+            for (std::size_t i = num_words() - 1; i > num_words_to_shift; i--) {
+                m_data[i] = m_data[(i - num_words_to_shift) - 0]
+                            << num_bits_to_shift;
+                m_data[i] |= m_data[(i - num_words_to_shift) - 1] >>
+                             (num_underlying_bits() - num_bits_to_shift);
             }
             m_data[num_words_to_shift] = m_data[0] << num_bits_to_shift;
         }
@@ -310,29 +318,33 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         return *this;
     }
 
-    constexpr bitset operator>>( std::size_t shift ) const noexcept {
+    constexpr bitset operator>>(std::size_t shift) const noexcept {
         return bitset(*this) >>= shift;
     }
 
-    constexpr bitset& operator>>=( std::size_t shift ) noexcept {
+    constexpr bitset &operator>>=(std::size_t shift) noexcept {
         if (shift == 0) {
             return *this;
         }
         const auto num_words_to_shift = shift / num_underlying_bits();
 
         if (const auto num_bits_to_shift = shift % num_underlying_bits();
-            num_bits_to_shift == 0 || num_bits_to_shift == num_underlying_bits()) {
+            num_bits_to_shift == 0 ||
+            num_bits_to_shift == num_underlying_bits()) {
             for (auto i = 0; i < (num_words() - 1) - num_words_to_shift; i++) {
-                m_data[i]  = m_data[(i + num_words_to_shift) + 0];
+                m_data[i] = m_data[(i + num_words_to_shift) + 0];
             }
-            m_data[(num_words() - 1) - num_words_to_shift] = m_data[num_words() - 1];
-        }
-        else {
+            m_data[(num_words() - 1) - num_words_to_shift] =
+                m_data[num_words() - 1];
+        } else {
             for (auto i = 0; i < (num_words() - 1) - num_words_to_shift; i++) {
-                m_data[i]  = m_data[(i + num_words_to_shift) + 0] >> num_bits_to_shift;
-                m_data[i] |= (m_data[(i + num_words_to_shift) + 1] << (num_underlying_bits() - num_bits_to_shift));
+                m_data[i] =
+                    m_data[(i + num_words_to_shift) + 0] >> num_bits_to_shift;
+                m_data[i] |= (m_data[(i + num_words_to_shift) + 1]
+                              << (num_underlying_bits() - num_bits_to_shift));
             }
-            m_data[(num_words() - 1) - num_words_to_shift] = m_data[num_words() - 1] >> num_bits_to_shift;
+            m_data[(num_words() - 1) - num_words_to_shift] =
+                m_data[num_words() - 1] >> num_bits_to_shift;
         }
 
         // zero-fill from the left
@@ -343,8 +355,10 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         return *this;
     }
 
-    template<class CharT = char, class Traits = std::char_traits<CharT>, class Allocator = std::allocator<CharT>>
-    std::basic_string<CharT, Traits, Allocator> to_string( CharT zero = CharT('0'), CharT one = CharT('1') ) const {
+    template <class CharT = char, class Traits = std::char_traits<CharT>,
+              class Allocator = std::allocator<CharT>>
+    std::basic_string<CharT, Traits, Allocator>
+    to_string(CharT zero = CharT('0'), CharT one = CharT('1')) const {
         std::basic_string<CharT, Traits, Allocator> str;
         str.reserve(size());
         for (auto i = size() - 1; i > 0; i--) {
@@ -377,7 +391,8 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     }
 
     constexpr unsigned long long to_ullong() const {
-        constexpr auto kNumBitsInUnsignedLongLong = 8 * sizeof(unsigned long long);
+        constexpr auto kNumBitsInUnsignedLongLong =
+            8 * sizeof(unsigned long long);
         if (N < kNumBitsInUnsignedLongLong) {
             unsigned long long value = 0;
             for (auto i = 0; i < size(); i++) {
@@ -398,7 +413,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         return value;
     }
 
-    constexpr bool operator==( const bitset& rhs) const noexcept {
+    constexpr bool operator==(const bitset &rhs) const noexcept {
         for (auto i = 0; i < num_words(); i++) {
             if (m_data[i] != rhs.m_data[i]) {
                 return false;
@@ -407,15 +422,19 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         if constexpr (N % num_underlying_bits() == 0) {
             return true;
         } else {
-            constexpr Underlying ones_mask = (1u << (N % num_underlying_bits())) - 1;
-            return (m_data[num_words() - 1] & ones_mask) == (rhs.m_data[num_words() -1 ] & ones_mask);
+            constexpr Underlying ones_mask =
+                (1u << (N % num_underlying_bits())) - 1;
+            return (m_data[num_words() - 1] & ones_mask) ==
+                   (rhs.m_data[num_words() - 1] & ones_mask);
         }
     }
 
-    constexpr bool operator!=(const bitset& rhs) const noexcept {return !(*this == rhs);}
+    constexpr bool operator!=(const bitset &rhs) const noexcept {
+        return !(*this == rhs);
+    }
 
-    friend constexpr bitset operator&( const bitset& lhs,
-                          const bitset& rhs ) noexcept {
+    friend constexpr bitset operator&(const bitset &lhs,
+                                      const bitset &rhs) noexcept {
         bitset value;
         for (auto i = 0; i < num_words(); i++) {
             value.m_data[i] = lhs.m_data[i] & rhs.m_data[i];
@@ -423,8 +442,8 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         return value;
     }
 
-    friend constexpr bitset operator|( const bitset& lhs,
-                          const bitset& rhs ) noexcept {
+    friend constexpr bitset operator|(const bitset &lhs,
+                                      const bitset &rhs) noexcept {
         bitset value;
         for (auto i = 0; i < num_words(); i++) {
             value.m_data[i] = lhs.m_data[i] | rhs.m_data[i];
@@ -432,8 +451,8 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         return value;
     }
 
-    friend constexpr bitset operator^( const bitset& lhs,
-                          const bitset& rhs ) noexcept {
+    friend constexpr bitset operator^(const bitset &lhs,
+                                      const bitset &rhs) noexcept {
         bitset value;
         for (auto i = 0; i < num_words(); i++) {
             value.m_data[i] = lhs.m_data[i] ^ rhs.m_data[i];
@@ -441,15 +460,17 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         return value;
     }
 
-
-    template< class CharT, class Traits>
-    friend std::basic_ostream<CharT, Traits>& operator<<( std::basic_ostream<CharT, Traits>& os, const bitset& bits) {
-        return os << bits.to_string(std::use_facet<std::ctype<CharT>>(os.getloc()).widen('0'),
-                                    std::use_facet<std::ctype<CharT>>(os.getloc()).widen('1'));
+    template <class CharT, class Traits>
+    friend std::basic_ostream<CharT, Traits> &
+    operator<<(std::basic_ostream<CharT, Traits> &os, const bitset &bits) {
+        return os << bits.to_string(
+                   std::use_facet<std::ctype<CharT>>(os.getloc()).widen('0'),
+                   std::use_facet<std::ctype<CharT>>(os.getloc()).widen('1'));
     }
 
-    template< class CharT, class Traits>
-    friend std::basic_istream<CharT, Traits>& operator>>( std::basic_istream<CharT, Traits>& is, bitset& bits ) {
+    template <class CharT, class Traits>
+    friend std::basic_istream<CharT, Traits> &
+    operator>>(std::basic_istream<CharT, Traits> &is, bitset &bits) {
         int i{N - 1};
         while (i >= 0) {
             CharT input;
@@ -481,11 +502,10 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
 
 namespace std {
 
-template<size_t N, typename Underlying>
-struct hash<nonstd::bitset<N, Underlying>>
-{
-    constexpr size_t operator()(const nonstd::bitset<N, Underlying>& s) const noexcept
-    {
+template <size_t N, typename Underlying>
+struct hash<nonstd::bitset<N, Underlying>> {
+    constexpr size_t
+    operator()(const nonstd::bitset<N, Underlying> &s) const noexcept {
         if constexpr (N < (8 * sizeof(unsigned long long))) {
             return hash<unsigned long long>()(s.to_ullong());
         }
@@ -493,9 +513,10 @@ struct hash<nonstd::bitset<N, Underlying>>
         // boost::hash_combine algorithm
         size_t value = hash<Underlying>()(s.m_data[0]);
         for (auto i = 1; i < s.num_words(); i++) {
-            value ^= hash<Underlying>()(s.m_data[i]) + 0x9e3779b9 + (value << 6) + (value >> 2);
+            value ^= hash<Underlying>()(s.m_data[i]) + 0x9e3779b9 +
+                     (value << 6) + (value >> 2);
         }
         return value;
     }
 };
-}
+} // namespace std
