@@ -17,28 +17,26 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
                   "bitset requires an unsigned underlying type");
 
     using underlying_type_t = Underlying;
-    static constexpr std::size_t num_underlying_bits() {
-        return 8 * sizeof(underlying_type_t);
-    }
 
-    static constexpr std::size_t num_words() {
-        return (N + num_underlying_bits() - 1) / num_underlying_bits();
-    }
+    static constexpr std::size_t s_num_underlying_bits =
+        8 * sizeof(underlying_type_t);
+    static constexpr std::size_t s_num_words =
+        (N + s_num_underlying_bits - 1) / s_num_underlying_bits;
 
     static constexpr std::size_t underlying_index(std::size_t i) {
-        return i / num_underlying_bits();
+        return i / s_num_underlying_bits;
     }
 
-    std::array<underlying_type_t, num_words()> m_data{underlying_type_t(0)};
+    std::array<underlying_type_t, s_num_words> m_data{underlying_type_t(0)};
 
-    static constexpr underlying_type_t m_last_word_mask =
-        (N % num_underlying_bits() == 0)
+    static constexpr underlying_type_t s_last_word_mask =
+        (N % s_num_underlying_bits == 0)
             ? ~underlying_type_t{0}
             : ~underlying_type_t{0} >>
-                  (num_underlying_bits() - (N % num_underlying_bits()));
+                  (s_num_underlying_bits - (N % s_num_underlying_bits));
 
     static constexpr underlying_type_t mask(std::size_t pos) noexcept {
-        return underlying_type_t{1} << (pos % num_underlying_bits());
+        return underlying_type_t{1} << (pos % s_num_underlying_bits);
     }
 
   public:
@@ -51,10 +49,10 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
             underlying_type_t copy =
                 (value >> num_bits_copied) & ~underlying_type_t(0);
             m_data[underlying_index(num_bits_copied)] = copy;
-            num_bits_copied += num_underlying_bits();
+            num_bits_copied += s_num_underlying_bits;
         }
         if (num_bits_in_ull > N) {
-            m_data[num_words() - 1] &= m_last_word_mask;
+            m_data[s_num_words - 1] &= s_last_word_mask;
         }
     }
 
@@ -166,11 +164,11 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     }
 
     constexpr bitset &set() noexcept {
-        for (auto i = 0; i < num_words(); i++) {
+        for (auto i = 0; i < s_num_words; i++) {
             m_data[i] = ~underlying_type_t{0};
         }
-        if constexpr (N % num_underlying_bits() != 0) {
-            m_data[num_words() - 1] = m_last_word_mask;
+        if constexpr (N % s_num_underlying_bits != 0) {
+            m_data[s_num_words - 1] = s_last_word_mask;
         }
         return *this;
     }
@@ -188,11 +186,11 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     }
 
     constexpr bitset &flip() noexcept {
-        for (auto i = 0; i < num_words(); i++) {
+        for (auto i = 0; i < s_num_words; i++) {
             m_data[i] = ~m_data[i];
         }
-        if constexpr (N % num_underlying_bits() != 0) {
-            m_data[num_words() - 1] &= m_last_word_mask;
+        if constexpr (N % s_num_underlying_bits != 0) {
+            m_data[s_num_words - 1] &= s_last_word_mask;
         }
         return *this;
     }
@@ -227,25 +225,25 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
 
     constexpr bool all() const noexcept {
         constexpr underlying_type_t ones = ~underlying_type_t{0};
-        for (auto i = 0; i < num_words() - 1; ++i) {
+        for (auto i = 0; i < s_num_words - 1; ++i) {
             if (m_data[i] != ones) {
                 return false;
             }
         }
-        return m_data[num_words() - 1] == m_last_word_mask;
+        return m_data[s_num_words - 1] == s_last_word_mask;
     }
 
     constexpr bool any() const noexcept {
-        for (auto i = 0; i < num_words() - 1; ++i) {
+        for (auto i = 0; i < s_num_words - 1; ++i) {
             if (m_data[i] != underlying_type_t{0}) {
                 return true;
             }
         }
-        return m_data[num_words() - 1];
+        return m_data[s_num_words - 1];
     }
 
     constexpr bool none() const noexcept {
-        for (auto i = 0; i < num_words(); ++i) {
+        for (auto i = 0; i < s_num_words; ++i) {
             if (m_data[i] != 0) {
                 return false;
             }
@@ -254,7 +252,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     }
 
     constexpr bitset &reset() noexcept {
-        for (auto i = 0; i < num_words(); i++) {
+        for (auto i = 0; i < s_num_words; i++) {
             m_data[i] = 0;
         }
         return *this;
@@ -263,21 +261,21 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     constexpr bitset &reset(std::size_t pos) { return set(pos, false); }
 
     constexpr bitset &operator&=(const bitset &other) noexcept {
-        for (auto i = 0; i < num_words(); i++) {
+        for (auto i = 0; i < s_num_words; i++) {
             m_data[i] &= other.m_data[i];
         }
         return *this;
     }
 
     constexpr bitset &operator|=(const bitset &other) noexcept {
-        for (auto i = 0; i < num_words(); i++) {
+        for (auto i = 0; i < s_num_words; i++) {
             m_data[i] |= other.m_data[i];
         }
         return *this;
     }
 
     constexpr bitset &operator^=(const bitset &other) noexcept {
-        for (auto i = 0; i < num_words(); i++) {
+        for (auto i = 0; i < s_num_words; i++) {
             m_data[i] ^= other.m_data[i];
         }
         return *this;
@@ -285,11 +283,11 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
 
     constexpr bitset operator~() const noexcept {
         bitset other;
-        for (auto i = 0; i < num_words(); i++) {
+        for (auto i = 0; i < s_num_words; i++) {
             other.m_data[i] = ~m_data[i];
         }
-        if (N % num_underlying_bits() != 0) {
-            other.m_data[num_words() - 1] &= m_last_word_mask;
+        if (N % s_num_underlying_bits != 0) {
+            other.m_data[s_num_words - 1] &= s_last_word_mask;
         }
         return other;
     }
@@ -307,21 +305,21 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
             return *this;
         }
 
-        const std::size_t num_words_to_shift = shift / num_underlying_bits();
+        const std::size_t num_words_to_shift = shift / s_num_underlying_bits;
 
         // If the shift is exactly the size of a word
-        if (const auto num_bits_to_shift = shift % num_underlying_bits();
+        if (const auto num_bits_to_shift = shift % s_num_underlying_bits;
             num_bits_to_shift == 0) {
-            for (auto i = num_words() - 1; i > num_words_to_shift; i--) {
+            for (auto i = s_num_words - 1; i > num_words_to_shift; i--) {
                 m_data[i] = m_data[(i - num_words_to_shift) - 0];
             }
             m_data[num_words_to_shift] = m_data[0];
         } else {
-            for (std::size_t i = num_words() - 1; i > num_words_to_shift; i--) {
+            for (std::size_t i = s_num_words - 1; i > num_words_to_shift; i--) {
                 m_data[i] = m_data[(i - num_words_to_shift) - 0]
                             << num_bits_to_shift;
                 m_data[i] |= m_data[(i - num_words_to_shift) - 1] >>
-                             (num_underlying_bits() - num_bits_to_shift);
+                             (s_num_underlying_bits - num_bits_to_shift);
             }
             m_data[num_words_to_shift] = m_data[0] << num_bits_to_shift;
         }
@@ -346,29 +344,29 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
             reset();
             return *this;
         }
-        const auto num_words_to_shift = shift / num_underlying_bits();
+        const auto num_words_to_shift = shift / s_num_underlying_bits;
 
         // If the shift is exactly the size of a word
-        if (const auto num_bits_to_shift = shift % num_underlying_bits();
+        if (const auto num_bits_to_shift = shift % s_num_underlying_bits;
             num_bits_to_shift == 0) {
-            for (auto i = 0; i < (num_words() - 1) - num_words_to_shift; i++) {
+            for (auto i = 0; i < (s_num_words - 1) - num_words_to_shift; i++) {
                 m_data[i] = m_data[(i + num_words_to_shift) + 0];
             }
-            m_data[(num_words() - 1) - num_words_to_shift] =
-                m_data[num_words() - 1];
+            m_data[(s_num_words - 1) - num_words_to_shift] =
+                m_data[s_num_words - 1];
         } else {
-            for (auto i = 0; i < (num_words() - 1) - num_words_to_shift; i++) {
+            for (auto i = 0; i < (s_num_words - 1) - num_words_to_shift; i++) {
                 m_data[i] =
                     m_data[(i + num_words_to_shift) + 0] >> num_bits_to_shift;
                 m_data[i] |= (m_data[(i + num_words_to_shift) + 1]
-                              << (num_underlying_bits() - num_bits_to_shift));
+                              << (s_num_underlying_bits - num_bits_to_shift));
             }
-            m_data[(num_words() - 1) - num_words_to_shift] =
-                m_data[num_words() - 1] >> num_bits_to_shift;
+            m_data[(s_num_words - 1) - num_words_to_shift] =
+                m_data[s_num_words - 1] >> num_bits_to_shift;
         }
 
         // zero-fill from the left
-        for (auto i = num_words() - num_words_to_shift; i < num_words(); i++) {
+        for (auto i = s_num_words - num_words_to_shift; i < s_num_words; i++) {
             m_data[i] = 0;
         }
 
@@ -397,9 +395,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         if (N < kNumBitsInUnsignedLong) {
             unsigned long value = 0;
 
-            for (auto i = num_words() - 1; i > 0; i--) {
+            for (auto i = s_num_words - 1; i > 0; i--) {
                 value |= (unsigned long)m_data[i]
-                         << (i * num_underlying_bits());
+                         << (i * s_num_underlying_bits);
             }
             value |= m_data[0];
 
@@ -408,13 +406,13 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
 
         unsigned long value = 0;
         for (auto i = kNumWordsInUnsignedLong - 1; i > 0; i--) {
-            value |= (unsigned long)m_data[i] << (i * num_underlying_bits());
+            value |= (unsigned long)m_data[i] << (i * s_num_underlying_bits);
         }
         value |= m_data[0];
 
         // Throw overflow_error if the bitset contains more data that cant be
         // represented
-        for (auto i = kNumWordsInUnsignedLong; i < num_words(); i++) {
+        for (auto i = kNumWordsInUnsignedLong; i < s_num_words; i++) {
             if (m_data[i] != 0) {
                 throw std::overflow_error("bitset to_ulong overflow error");
             }
@@ -430,9 +428,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
 
         if constexpr (N < kNumBitsInUnsignedLongLong) {
             unsigned long value = 0;
-            for (auto i = num_words() - 1; i > 0; i--) {
+            for (auto i = s_num_words - 1; i > 0; i--) {
                 value |= (unsigned long long)m_data[i]
-                         << (i * num_underlying_bits());
+                         << (i * s_num_underlying_bits);
             }
             value |= m_data[0];
 
@@ -442,13 +440,13 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         unsigned long long value = 0;
         for (auto i = kNumWordsInUnsignedLongLong - 1; i > 0; i--) {
             value |= (unsigned long long)m_data[i]
-                     << (i * num_underlying_bits());
+                     << (i * s_num_underlying_bits);
         }
         value |= m_data[0];
 
         // Throw overflow_error if the bitset contains more data that cant be
         // represented
-        for (auto i = kNumWordsInUnsignedLongLong; i < num_words(); i++) {
+        for (auto i = kNumWordsInUnsignedLongLong; i < s_num_words; i++) {
             if (m_data[i] != 0) {
                 throw std::overflow_error("bitset to_ulong overflow error");
             }
@@ -457,15 +455,15 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     }
 
     constexpr bool operator==(const bitset &rhs) const noexcept {
-        for (auto i = 0; i < num_words(); i++) {
+        for (auto i = 0; i < s_num_words; i++) {
             if (m_data[i] != rhs.m_data[i]) {
                 return false;
             }
         }
-        if constexpr (N % num_underlying_bits() == 0) {
+        if constexpr (N % s_num_underlying_bits == 0) {
             return true;
         } else {
-            return m_data[num_words() - 1] == rhs.m_data[num_words() - 1];
+            return m_data[s_num_words - 1] == rhs.m_data[s_num_words - 1];
         }
     }
 
@@ -476,7 +474,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     friend constexpr bitset operator&(const bitset &lhs,
                                       const bitset &rhs) noexcept {
         bitset value;
-        for (auto i = 0; i < num_words(); i++) {
+        for (auto i = 0; i < s_num_words; i++) {
             value.m_data[i] = lhs.m_data[i] & rhs.m_data[i];
         }
         return value;
@@ -485,7 +483,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     friend constexpr bitset operator|(const bitset &lhs,
                                       const bitset &rhs) noexcept {
         bitset value;
-        for (auto i = 0; i < num_words(); i++) {
+        for (auto i = 0; i < s_num_words; i++) {
             value.m_data[i] = lhs.m_data[i] | rhs.m_data[i];
         }
         return value;
@@ -494,7 +492,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     friend constexpr bitset operator^(const bitset &lhs,
                                       const bitset &rhs) noexcept {
         bitset value;
-        for (auto i = 0; i < num_words(); i++) {
+        for (auto i = 0; i < s_num_words; i++) {
             value.m_data[i] = lhs.m_data[i] ^ rhs.m_data[i];
         }
         return value;
@@ -552,7 +550,7 @@ struct hash<nonstd::bitset<N, Underlying>> {
 
         // boost::hash_combine algorithm
         size_t value = hash<Underlying>()(s.m_data[0]);
-        for (auto i = 1; i < s.num_words(); i++) {
+        for (auto i = 1; i < s.s_num_words; i++) {
             value ^= hash<Underlying>()(s.m_data[i]) + 0x9e3779b9 +
                      (value << 6) + (value >> 2);
         }
