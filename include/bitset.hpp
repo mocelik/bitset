@@ -31,9 +31,10 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     underlying_type_t m_data[num_words()] = {underlying_type_t(0)};
 
     static constexpr underlying_type_t m_last_word_mask =
-        (N % num_underlying_bits() != 0)
-            ? (1 << (N % num_underlying_bits())) - 1
-            : ~0;
+        (N % num_underlying_bits() == 0)
+            ? ~underlying_type_t{0}
+            : ~underlying_type_t{0} >>
+                  (num_underlying_bits() - (N % num_underlying_bits()));
 
     static constexpr underlying_type_t mask(std::size_t pos) noexcept {
         return underlying_type_t{1} << (pos % num_underlying_bits());
@@ -43,10 +44,16 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     constexpr bitset() noexcept = default;
 
     constexpr bitset(unsigned long long value) noexcept {
-        for (auto i = 0; i < 8 * sizeof value && i < N; i++) {
-            if ((1ULL << i) & value) {
-                this->operator[](i) = true;
-            }
+        std::size_t num_bits_copied{0};
+        constexpr std::size_t num_bits_in_ull{8 * sizeof value};
+        while (num_bits_copied < num_bits_in_ull && num_bits_copied < N) {
+            underlying_type_t copy =
+                (value >> num_bits_copied) & ~underlying_type_t(0);
+            m_data[underlying_index(num_bits_copied)] = copy;
+            num_bits_copied += num_underlying_bits();
+        }
+        if (num_bits_in_ull > N) {
+            m_data[num_words() - 1] &= m_last_word_mask;
         }
     }
 

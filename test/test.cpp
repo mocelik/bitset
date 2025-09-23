@@ -40,6 +40,13 @@ TYPED_TEST(Bitset, constructor_unsignedlonglong) {
 
     constexpr bitset<1, TypeParam> s_overflow(~0ull);
     ASSERT_TRUE(s_overflow[0]);
+
+    constexpr unsigned long long big_value{1 | 1ULL << 31 | 1ULL << 49 |
+                                           1ULL << 50 | 1ULL << 60};
+    constexpr bitset<50, TypeParam> fewer_bits(big_value);
+    ASSERT_TRUE(fewer_bits[0]);
+    ASSERT_TRUE(fewer_bits[31]);
+    ASSERT_TRUE(fewer_bits[49]);
 }
 
 TYPED_TEST(Bitset, constructor_string) {
