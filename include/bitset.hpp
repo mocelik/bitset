@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -28,7 +29,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         return i / num_underlying_bits();
     }
 
-    underlying_type_t m_data[num_words()] = {underlying_type_t(0)};
+    std::array<underlying_type_t, num_words()> m_data{underlying_type_t(0)};
 
     static constexpr underlying_type_t m_last_word_mask =
         (N % num_underlying_bits() == 0)
