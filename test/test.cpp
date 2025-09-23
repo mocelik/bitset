@@ -725,6 +725,13 @@ TYPED_TEST(Bitset, to_ulong) {
     s.flip();
     static_assert(kNumBits > kNumBitsInUnsignedLong);
     ASSERT_THROW(s.to_ulong(), std::overflow_error);
+
+    bitset<kNumBitsInUnsignedLong + 1, TypeParam> overflow;
+    overflow.set(kNumBitsInUnsignedLong);
+    ASSERT_THROW(s.to_ullong(), std::overflow_error);
+
+    ASSERT_EQ((bitset<kNumBits, TypeParam>(1).to_ulong()), 1);
+    ASSERT_EQ((bitset<1, TypeParam>(1).to_ulong()), 1);
 }
 
 TYPED_TEST(Bitset, to_ullong) {
@@ -736,6 +743,13 @@ TYPED_TEST(Bitset, to_ullong) {
     s.flip();
     static_assert(kNumBits > kNumBitsInUnsignedLongLong);
     ASSERT_THROW(s.to_ullong(), std::overflow_error);
+
+    bitset<kNumBitsInUnsignedLongLong + 1, TypeParam> overflow;
+    overflow.set(kNumBitsInUnsignedLongLong);
+    ASSERT_THROW(s.to_ullong(), std::overflow_error);
+
+    ASSERT_EQ((bitset<kNumBits, TypeParam>(1).to_ullong()), 1);
+    ASSERT_EQ((bitset<1, TypeParam>(1).to_ullong()), 1);
 }
 
 TYPED_TEST(Bitset, free_operator_bitand) {
