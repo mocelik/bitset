@@ -1,4 +1,4 @@
-# small-bitset
+# bitset
 
 [![SonarQube](https://github.com/mocelik/small-bitset/actions/workflows/build.yml/badge.svg)](https://github.com/mocelik/small-bitset/actions/workflows/build.yml) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mocelik_small-bitset&metric=alert_status&token=e850a0453903c61bb30f7645c1bcb702a7228fdf)](https://sonarcloud.io/summary/new_code?id=mocelik_small-bitset) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=mocelik_small-bitset&metric=coverage&token=e850a0453903c61bb30f7645c1bcb702a7228fdf)](https://sonarcloud.io/summary/new_code?id=mocelik_small-bitset)
 
