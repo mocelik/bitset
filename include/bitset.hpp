@@ -143,7 +143,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         }
 
         constexpr reference &flip() noexcept {
-            m_parent.set(m_pos, !*this);
+            this->operator=(bool(!*this));
             return *this;
         }
 
