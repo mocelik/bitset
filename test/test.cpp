@@ -189,6 +189,11 @@ TYPED_TEST(Bitset, reference_operator_eq_reference) {
 TYPED_TEST(Bitset, reference_operator_not) {
     bitset<kNumBits, TypeParam> s;
     ASSERT_TRUE(~s[0]);
+
+    bitset<23, TypeParam> uneven_bitset;
+    uneven_bitset = ~uneven_bitset;
+    ASSERT_TRUE(uneven_bitset[0]);
+    ASSERT_TRUE(uneven_bitset[22]);
 }
 
 TYPED_TEST(Bitset, reference_operator_flip) {
@@ -732,6 +737,8 @@ TYPED_TEST(Bitset, to_ulong) {
 
     ASSERT_EQ((bitset<kNumBits, TypeParam>(1).to_ulong()), 1);
     ASSERT_EQ((bitset<1, TypeParam>(1).to_ulong()), 1);
+    ASSERT_EQ((bitset<24, TypeParam>(1).to_ulong()), 1);
+    ASSERT_EQ((bitset<63, TypeParam>(1).to_ulong()), 1);
 }
 
 TYPED_TEST(Bitset, to_ullong) {
@@ -750,6 +757,8 @@ TYPED_TEST(Bitset, to_ullong) {
 
     ASSERT_EQ((bitset<kNumBits, TypeParam>(1).to_ullong()), 1);
     ASSERT_EQ((bitset<1, TypeParam>(1).to_ullong()), 1);
+    ASSERT_EQ((bitset<24, TypeParam>(1).to_ullong()), 1);
+    ASSERT_EQ((bitset<63, TypeParam>(1).to_ullong()), 1);
 }
 
 TYPED_TEST(Bitset, free_operator_bitand) {
