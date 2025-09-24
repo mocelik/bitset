@@ -9,11 +9,18 @@
 #include <iterator>
 #include <stdexcept>
 #include <type_traits>
+#include <version> // for __cpp_if_constexpr
+
+#ifdef __cpp_if_constexpr
+#define IF_CONSTEXPR constexpr
+#else
+#define IF_CONSTEXPR
+#endif
 
 namespace nonstd {
 
 template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
-    static_assert(std::is_unsigned_v<Underlying>,
+    static_assert(std::is_unsigned<Underlying>::value,
                   "bitset requires an unsigned underlying type");
 
     using underlying_type_t = Underlying;
@@ -27,7 +34,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         return i / s_num_underlying_bits;
     }
 
-    std::array<underlying_type_t, s_num_words> m_data{underlying_type_t(0)};
+    underlying_type_t m_data[s_num_words] = {underlying_type_t(0)};
 
     static constexpr underlying_type_t s_last_word_mask =
         (N % s_num_underlying_bits == 0)
@@ -68,9 +75,12 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         }
 
         auto i = 0;
-        auto reverse_start = std::reverse_iterator(
+        auto reverse_start = std::reverse_iterator<
+            typename std::basic_string<CharT, Traits, Alloc>::const_iterator>(
             n == str.npos ? str.end() : str.begin() + pos + n);
-        auto reverse_end = std::reverse_iterator(str.begin() + pos);
+        auto reverse_end = std::reverse_iterator<
+            typename std::basic_string<CharT, Traits, Alloc>::const_iterator>(
+            str.begin() + pos);
         auto iter = reverse_start;
         while (iter != reverse_end) {
             if (Traits::eq(*iter, zero)) {
@@ -96,8 +106,8 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
             n = len;
         }
 
-        auto iter = std::reverse_iterator(end);
-        auto reverse_end = std::reverse_iterator(end - n);
+        auto iter = std::reverse_iterator<const CharT *>(end);
+        auto reverse_end = std::reverse_iterator<const CharT *>(end - n);
 
         auto i = 0;
         while (iter != reverse_end) {
@@ -167,7 +177,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         for (auto i = 0; i < s_num_words; i++) {
             m_data[i] = ~underlying_type_t{0};
         }
-        if constexpr (N % s_num_underlying_bits != 0) {
+        if IF_CONSTEXPR (N % s_num_underlying_bits != 0) {
             m_data[s_num_words - 1] = s_last_word_mask;
         }
         return *this;
@@ -189,7 +199,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         for (auto i = 0; i < s_num_words; i++) {
             m_data[i] = ~m_data[i];
         }
-        if constexpr (N % s_num_underlying_bits != 0) {
+        if IF_CONSTEXPR (N % s_num_underlying_bits != 0) {
             m_data[s_num_words - 1] &= s_last_word_mask;
         }
         return *this;
@@ -307,9 +317,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
 
         const std::size_t num_words_to_shift = shift / s_num_underlying_bits;
 
+        const auto num_bits_to_shift = shift % s_num_underlying_bits;
         // If the shift is exactly the size of a word
-        if (const auto num_bits_to_shift = shift % s_num_underlying_bits;
-            num_bits_to_shift == 0) {
+        if (num_bits_to_shift == 0) {
             for (auto i = s_num_words - 1; i > num_words_to_shift; i--) {
                 m_data[i] = m_data[(i - num_words_to_shift) - 0];
             }
@@ -346,9 +356,9 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
         }
         const auto num_words_to_shift = shift / s_num_underlying_bits;
 
+        const auto num_bits_to_shift = shift % s_num_underlying_bits;
         // If the shift is exactly the size of a word
-        if (const auto num_bits_to_shift = shift % s_num_underlying_bits;
-            num_bits_to_shift == 0) {
+        if (num_bits_to_shift == 0) {
             for (auto i = 0; i < (s_num_words - 1) - num_words_to_shift; i++) {
                 m_data[i] = m_data[(i + num_words_to_shift) + 0];
             }
@@ -387,7 +397,10 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     }
 
     constexpr unsigned long to_ulong() const {
-        static_assert(sizeof(unsigned long) % sizeof(underlying_type_t) == 0);
+        static_assert(
+            sizeof(unsigned long) % sizeof(underlying_type_t) == 0,
+            "bitset underlying type must divide evenly into unsigned long");
+
         constexpr auto kNumBitsInUnsignedLong = 8 * sizeof(unsigned long);
         constexpr auto kNumWordsInUnsignedLong =
             sizeof(unsigned long) / sizeof(underlying_type_t);
@@ -421,12 +434,17 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
     }
 
     constexpr unsigned long long to_ullong() const {
+        static_assert(sizeof(unsigned long long) % sizeof(underlying_type_t) ==
+                          0,
+                      "bitset underlying type must divide evenly into unsigned "
+                      "long long");
+
         constexpr auto kNumBitsInUnsignedLongLong =
             8 * sizeof(unsigned long long);
         constexpr auto kNumWordsInUnsignedLongLong =
             sizeof(unsigned long long) / sizeof(underlying_type_t);
 
-        if constexpr (N < kNumBitsInUnsignedLongLong) {
+        if IF_CONSTEXPR (N < kNumBitsInUnsignedLongLong) {
             unsigned long value = 0;
             for (auto i = s_num_words - 1; i > 0; i--) {
                 value |= (unsigned long long)m_data[i]
@@ -460,7 +478,7 @@ template <std::size_t N, typename Underlying = std::uint8_t> class bitset {
                 return false;
             }
         }
-        if constexpr (N % s_num_underlying_bits == 0) {
+        if IF_CONSTEXPR (N % s_num_underlying_bits == 0) {
             return true;
         } else {
             return m_data[s_num_words - 1] == rhs.m_data[s_num_words - 1];
@@ -544,7 +562,7 @@ template <size_t N, typename Underlying>
 struct hash<nonstd::bitset<N, Underlying>> {
     constexpr size_t
     operator()(const nonstd::bitset<N, Underlying> &s) const noexcept {
-        if constexpr (N < (8 * sizeof(unsigned long long))) {
+        if IF_CONSTEXPR (N < (8 * sizeof(unsigned long long))) {
             return hash<unsigned long long>()(s.to_ullong());
         }
 

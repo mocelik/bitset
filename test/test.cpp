@@ -27,10 +27,10 @@ TYPED_TEST(Bitset, constructor_default) {
 }
 
 TYPED_TEST(Bitset, constructor_unsignedlonglong) {
-    constexpr bitset<kNumBits, TypeParam> s_1(1);
+    bitset<kNumBits, TypeParam> s_1(1ULL);
     ASSERT_TRUE(s_1[0]);
 
-    constexpr bitset<kNumBits, TypeParam> s_all(~0ull);
+    bitset<kNumBits, TypeParam> s_all(~0ULL);
     for (auto i = 0; i < 8 * sizeof(unsigned long long); i++) {
         ASSERT_TRUE(s_all[i]);
     }
@@ -38,12 +38,12 @@ TYPED_TEST(Bitset, constructor_unsignedlonglong) {
         ASSERT_FALSE(s_all[i]);
     }
 
-    constexpr bitset<1, TypeParam> s_overflow(~0ull);
+    bitset<1, TypeParam> s_overflow(~0ULL);
     ASSERT_TRUE(s_overflow[0]);
 
-    constexpr unsigned long long big_value{1 | 1ULL << 31 | 1ULL << 49 |
-                                           1ULL << 50 | 1ULL << 60};
-    constexpr bitset<50, TypeParam> fewer_bits(big_value);
+    unsigned long long big_value{1 | 1ULL << 31 | 1ULL << 49 | 1ULL << 50 |
+                                 1ULL << 60};
+    bitset<50, TypeParam> fewer_bits(big_value);
     ASSERT_TRUE(fewer_bits[0]);
     ASSERT_TRUE(fewer_bits[31]);
     ASSERT_TRUE(fewer_bits[49]);
@@ -91,7 +91,7 @@ TYPED_TEST(Bitset, constructor_string) {
 }
 
 TYPED_TEST(Bitset, constructor_charptr) {
-    constexpr bitset<kNumBits, TypeParam> s("110010"); // 110010
+    bitset<kNumBits, TypeParam> s("110010"); // 110010
     ASSERT_FALSE(s[0]) << s;
     ASSERT_TRUE(s[1]) << s;
     ASSERT_FALSE(s[2]) << s;
@@ -102,7 +102,7 @@ TYPED_TEST(Bitset, constructor_charptr) {
         ASSERT_FALSE(s[i]) << "i: " << i << ", s: " << s;
     }
 
-    constexpr bitset<kNumBits, TypeParam> s_offset("110010", 4); // 0010
+    bitset<kNumBits, TypeParam> s_offset("110010", 4); // 0010
     ASSERT_FALSE(s_offset[0]) << s_offset;
     ASSERT_TRUE(s_offset[1]) << s_offset;
     ASSERT_FALSE(s_offset[2]) << s_offset;
@@ -111,15 +111,15 @@ TYPED_TEST(Bitset, constructor_charptr) {
         ASSERT_FALSE(s_offset[i]) << "i: " << i << ", s: " << s_offset;
     }
 
-    constexpr bitset<kNumBits, TypeParam> s_offset_size("11001", 3); // 001
+    bitset<kNumBits, TypeParam> s_offset_size("11001", 3); // 001
     ASSERT_TRUE(s_offset_size[0]);
     for (auto i = 1; i < s_offset_size.size(); i++) {
         ASSERT_FALSE(s_offset_size[i])
             << "i: " << i << ", s: " << s_offset_size;
     }
 
-    constexpr bitset<kNumBits, TypeParam> s_alt_char("XXOOXO", 6, 'O',
-                                                     'X'); // 110010
+    bitset<kNumBits, TypeParam> s_alt_char("XXOOXO", 6, 'O',
+                                           'X'); // 110010
     ASSERT_FALSE(s_alt_char[0]) << s_alt_char;
     ASSERT_TRUE(s_alt_char[1]) << s_alt_char;
     ASSERT_FALSE(s_alt_char[2]) << s_alt_char;
@@ -333,19 +333,19 @@ TYPED_TEST(Bitset, count) {
 
 TYPED_TEST(Bitset, size) {
     bitset<1, TypeParam> s_1;
-    static_assert(s_1.size() == 1);
+    static_assert(s_1.size() == 1, "constexpr size() failed for size 1");
 
     bitset<8, TypeParam> s_8;
-    static_assert(s_8.size() == 8);
+    static_assert(s_8.size() == 8, "constexpr size() failed for size 8");
 
     bitset<9, TypeParam> s_9;
-    static_assert(s_9.size() == 9);
+    static_assert(s_9.size() == 9, "constexpr size() failed for size 9");
 
     bitset<64, TypeParam> s_64;
-    static_assert(s_64.size() == 64);
+    static_assert(s_64.size() == 64, "constexpr size() failed for size 64");
 
     bitset<129, TypeParam> s_129;
-    static_assert(s_129.size() == 129);
+    static_assert(s_129.size() == 129, "constexpr size() failed for size 129");
 }
 
 TYPED_TEST(Bitset, all) {
@@ -730,12 +730,13 @@ TYPED_TEST(Bitset, to_string) {
 
 TYPED_TEST(Bitset, to_ulong) {
     constexpr auto kNumBitsInUnsignedLong = 8 * sizeof(unsigned long);
-    constexpr auto value = 1ul << (kNumBitsInUnsignedLong - 1);
+    constexpr auto value = 1UL << (kNumBitsInUnsignedLong - 1);
     bitset<kNumBits, TypeParam> s(value);
     ASSERT_EQ(s.to_ulong(), value) << s;
 
     s.flip();
-    static_assert(kNumBits > kNumBitsInUnsignedLong);
+    static_assert(kNumBits > kNumBitsInUnsignedLong,
+                  "Test invalid: kNumBits <= bits in unsigned long");
     ASSERT_THROW(s.to_ulong(), std::overflow_error);
 
     bitset<kNumBitsInUnsignedLong + 1, TypeParam> overflow;
@@ -750,12 +751,13 @@ TYPED_TEST(Bitset, to_ulong) {
 
 TYPED_TEST(Bitset, to_ullong) {
     constexpr auto kNumBitsInUnsignedLongLong = 8 * sizeof(unsigned long long);
-    constexpr auto value = 1ul << (kNumBitsInUnsignedLongLong - 1);
+    constexpr auto value = 1UL << (kNumBitsInUnsignedLongLong - 1);
     bitset<kNumBits, TypeParam> s(value);
     ASSERT_EQ(s.to_ullong(), value) << s;
 
     s.flip();
-    static_assert(kNumBits > kNumBitsInUnsignedLongLong);
+    static_assert(kNumBits > kNumBitsInUnsignedLongLong,
+                  "Test invalid: kNumBits <= bits in unsigned long long");
     ASSERT_THROW(s.to_ullong(), std::overflow_error);
 
     bitset<kNumBitsInUnsignedLongLong + 1, TypeParam> overflow;

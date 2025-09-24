@@ -14,7 +14,7 @@ all: test
 test: ${TEST_APP}
 	@${TEST_APP}
 
-CXXFLAGS := $(addprefix -I,${INCLUDE_DIRS}) -g -std=c++17 --coverage
+CXXFLAGS := $(addprefix -I,${INCLUDE_DIRS}) -g -std=c++14 --coverage
 LDFLAGS  := -L${LIB_DIR}
 LDLIBS   := -lgtest -lgtest_main
 CXX      := bear --append --output ${BUILD_DIR}/compile_commands.json -- ${CXX}
